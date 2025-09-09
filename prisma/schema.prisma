@@ -29,6 +29,7 @@ model Plant {
 model ServiceItem {
   id           String @id @default(cuid())
   category     String
+  section      String?
   name         String
   unit         String
   pricePerUnit Float

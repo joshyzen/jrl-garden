@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createPlant, deletePlant, updatePlant } from "../actions";
-import { PlantPhotoUploader } from "@/components/PlantPhotoUploader";
+import { PlantImagesButton } from "@/components/PlantImagesButton";
 import { PlantsCsvImport } from "@/components/PlantsCsvImport";
 import { AdminPlantAddForm } from "@/components/AdminPlantAddForm";
 
@@ -18,8 +18,11 @@ export default async function AdminPlants() {
     <div className="space-y-3">
       <h1 className="text-xl font-semibold">Plants</h1>
       <AdminPlantAddForm categories={categories} lightNeeds={lightNeeds} />
-      <div className="brand-card p-3">
-        <h2 className="font-semibold mb-2">Bulk Import Plants</h2>
+      <div className="brand-card p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold">Bulk Import Plants</h2>
+          <a href="/api/plants/export" className="brand-btn px-3 py-1.5 rounded-md text-sm">Export CSV</a>
+        </div>
         <PlantsCsvImport />
       </div>
       {/* Mobile cards */}
@@ -29,7 +32,8 @@ export default async function AdminPlants() {
             <div className="flex items-center justify-between">
               <div className="text-sm opacity-70">{p.category || "Uncategorized"}</div>
               <div className="flex items-center gap-2">
-                <PlantPhotoUploader plantId={p.id} />
+                { /* @ts-expect-error Client Component */ }
+                <PlantImagesButton plantId={p.id} className="brand-btn px-3 py-1.5 rounded-md text-sm" />
                 <form action={deletePlant}>
                   <input type="hidden" name="id" value={p.id} />
                   <button className="text-red-700 underline text-sm">Delete</button>
@@ -96,7 +100,10 @@ export default async function AdminPlants() {
                 </form>
               </td>
               <td className="text-right flex items-center gap-2 justify-end">
-                <PlantPhotoUploader plantId={p.id} />
+                {/* Open images modal */}
+                {/* Use anchor with query param to keep server component simple */}
+                { /* @ts-expect-error Client Component */ }
+                <PlantImagesButton plantId={p.id} className="brand-btn px-3 py-1.5 rounded-md text-sm" />
                 <form action={deletePlant}>
                   <input type="hidden" name="id" value={p.id} />
                   <button className="text-red-700 underline">Delete</button>
@@ -106,6 +113,7 @@ export default async function AdminPlants() {
           ))}
         </tbody>
       </table>
+      {/* client buttons manage their own modals */}
     </div>
   );
 }

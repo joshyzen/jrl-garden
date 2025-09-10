@@ -5,9 +5,10 @@ import { compressImageFile } from "@/lib/imageCompress";
 type Props = {
   plantId: string;
   onSaved?: (url: string) => void;
+  makePrimary?: boolean;
 };
 
-export function PlantPhotoUploader({ plantId, onSaved }: Props) {
+export function PlantPhotoUploader({ plantId, onSaved, makePrimary }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +38,7 @@ export function PlantPhotoUploader({ plantId, onSaved }: Props) {
       const saveRes = await fetch("/api/plants/set-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: plantId, imageUrl: data.secure_url }),
+        body: JSON.stringify({ id: plantId, url: data.secure_url, primary: Boolean(makePrimary) }),
       });
       if (!saveRes.ok) throw new Error("Failed to save image URL");
       onSaved?.(data.secure_url);

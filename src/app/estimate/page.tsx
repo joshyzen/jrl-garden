@@ -104,6 +104,7 @@ export default function EstimateWizard() {
           <h2 className="text-lg font-semibold">{section}</h2>
           {Object.keys(grouped[section]).map((category) => (
             <div key={category} className="brand-card p-3">
+              <div className="mb-2 font-medium">{category}</div>
               {(() => {
                 const itemsInCat = grouped[section][category];
                 const uniqueUnits = Array.from(new Set(itemsInCat.map((i) => i.unit))).filter(Boolean);

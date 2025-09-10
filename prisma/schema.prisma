@@ -26,6 +26,7 @@ model Plant {
   category    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  images      PlantImage[]
 }
 
 model ServiceItem {
@@ -47,4 +48,15 @@ model Estimate {
   labor      Float    @default(0)
   status     String   @default("pending")
   createdAt  DateTime @default(now())
+}
+
+model PlantImage {
+  id        String   @id @default(cuid())
+  plantId   String
+  url       String
+  alt       String?
+  primary   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  @@index([plantId])
 }

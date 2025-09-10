@@ -51,6 +51,10 @@ export default async function AdminPlants() {
                 <option value="true">Native</option>
                 <option value="false">Non-native</option>
               </select>
+              <div className="grid grid-cols-2 gap-2">
+                <input name="price" type="number" step="0.01" defaultValue={(p as any).price || ''} className="border rounded px-2 py-1 text-sm" placeholder="Price" />
+                <input name="unit" defaultValue={(p as any).unit || ''} className="border rounded px-2 py-1 text-sm" placeholder="Unit (each, flat, etc.)" />
+              </div>
               <textarea name="description" defaultValue={p.description} className="border rounded px-2 py-1 text-sm" placeholder="Description" />
               <button className="brand-btn px-3 py-1.5 rounded-md text-sm justify-self-start">Save</button>
             </form>
@@ -66,6 +70,8 @@ export default async function AdminPlants() {
             <th>Native</th>
             <th>Light</th>
             <th>Category</th>
+            <th>Price</th>
+            <th>Unit</th>
             <th></th>
           </tr>
         </thead>
@@ -97,6 +103,18 @@ export default async function AdminPlants() {
                 <form action={updatePlant}>
                   <input type="hidden" name="id" value={p.id} />
                   <input name="category" defaultValue={p.category} className="border rounded px-2 py-0.5 text-sm" />
+                </form>
+              </td>
+              <td>
+                <form action={updatePlant}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <input name="price" type="number" step="0.01" defaultValue={(p as any).price || ''} className="border rounded px-2 py-0.5 text-sm w-20" placeholder="Price" />
+                </form>
+              </td>
+              <td>
+                <form action={updatePlant}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <input name="unit" defaultValue={(p as any).unit || ''} className="border rounded px-2 py-0.5 text-sm w-20" placeholder="Unit" />
                 </form>
               </td>
               <td className="text-right flex items-center gap-2 justify-end">

@@ -24,6 +24,8 @@ model Plant {
   description String
   imageUrl    String?
   category    String
+  price       Float?
+  unit        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   images      PlantImage[]

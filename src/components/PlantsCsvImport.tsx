@@ -7,7 +7,7 @@ type Row = Record<string, string>;
 export function PlantsCsvImport() {
   const [rows, setRows] = useState<Row[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const [result, setResult] = useState<{ imported: number; updated: number } | null>(null);
+  const [result, setResult] = useState<{ imported: number; updated: number; message?: string; errors?: any[] } | null>(null);
   const [uploading, setUploading] = useState(false);
 
   function onFile(file: File) {
@@ -42,7 +42,7 @@ export function PlantsCsvImport() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Import failed");
-      setResult({ imported: data.imported, updated: data.updated });
+      setResult({ imported: data.imported, updated: data.updated, message: data.message, errors: data.errors });
     } catch (e: any) {
       setErrors((prev) => [...prev, e.message || "Upload error"]);
     } finally {
@@ -90,8 +90,17 @@ export function PlantsCsvImport() {
             </div>
           )}
           {result && (
-            <div className="text-sm">
-              Imported: {result.imported}, Updated: {result.updated}
+            <div className="text-sm space-y-1">
+              <div>Imported: {result.imported}, Updated: {result.updated}</div>
+              {result.message && <div className="text-xs opacity-70">{result.message}</div>}
+              {result.errors && result.errors.length > 0 && (
+                <div className="text-red-700 text-xs space-y-1">
+                  <div>Import errors:</div>
+                  {result.errors.map((err, i) => (
+                    <div key={i}>{err.name}: {err.error}</div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

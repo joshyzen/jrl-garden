@@ -22,6 +22,8 @@ export async function GET() {
     "Light Needs",
     "Mature Size",
     "Description",
+    "Price",
+    "Unit",
     "Image URL",
   ];
   const lines = [headers.join(",")];
@@ -35,6 +37,8 @@ export async function GET() {
         p.lightNeeds,
         p.matureSize,
         p.description,
+        (p as any).price || "",
+        (p as any).unit || "",
         p.imageUrl || "",
       ])
     );

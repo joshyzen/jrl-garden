@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PlantsFilterBar } from "@/components/PlantsFilterBar";
+import { PlantCard } from "@/components/PlantCard";
 
 const categories = [
   "All",
@@ -32,19 +33,7 @@ export default async function PlantsPage({ searchParams }: { searchParams: Promi
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {plants.map((p) => (
-          <a key={p.id} href={`/plants/${p.id}`} className="overflow-hidden brand-card">
-            <div className="aspect-[4/3] bg-[rgba(45,80,22,0.08)]">
-              {p.imageUrl?.startsWith("http") ? (
-                <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-xs opacity-60">Photo coming soon</div>
-              )}
-            </div>
-            <div className="p-2">
-              <div className="text-sm font-medium">{p.name}</div>
-              <div className="text-xs opacity-70">{p.isNative ? "Native" : ""} • {p.lightNeeds}</div>
-            </div>
-          </a>
+          <PlantCard key={p.id} plant={p} showPrice={true} />
         ))}
       </div>
     </div>

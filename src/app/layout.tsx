@@ -32,11 +32,11 @@ export default function RootLayout({
               <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-full object-cover border border-[rgba(45,80,22,0.2)] bg-[var(--foreground)]/5" />
               <div className="leading-tight">
                 <div className="text-lg font-semibold tracking-tight">Josh Race Landscape</div>
-                <div className="text-xs opacity-80">jrl.garden</div>
+                <div className="text-xs opacity-80">https://jrl.garden | 904-640-9088</div>
               </div>
             </div>
-            <a href="tel:19046409088" className="text-sm font-semibold brand-btn px-3 py-1.5 rounded-md shadow-sm active:opacity-90">
-              Call 904-640-9088
+            <a href="/estimate" className="text-sm font-semibold brand-btn px-3 py-1.5 rounded-md shadow-sm active:opacity-90">
+              Start estimate
             </a>
           </div>
         </header>

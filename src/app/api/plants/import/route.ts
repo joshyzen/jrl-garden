@@ -9,6 +9,8 @@ type Row = {
   "Light Needs"?: string;
   "Mature Size"?: string;
   Description?: string;
+  Price?: string;
+  Unit?: string;
 };
 
 export async function POST(req: Request) {
@@ -25,6 +27,15 @@ export async function POST(req: Request) {
       const isNative = String(r.Native || "").toLowerCase().trim();
       const nativeBool = ["true", "yes", "y", "1", "native"].includes(isNative);
 
+      const priceStr = String(r.Price || "").trim();
+      let price = null;
+      if (priceStr) {
+        const parsed = parseFloat(priceStr);
+        if (!isNaN(parsed) && parsed >= 0) {
+          price = parsed;
+        }
+      }
+      
       const data = {
         name: String(r.Name || "").trim(),
         scientificName: (r["Scientific Name"] || "").trim() || null,
@@ -33,6 +44,8 @@ export async function POST(req: Request) {
         lightNeeds: String(r["Light Needs"] || "").trim(),
         matureSize: String(r["Mature Size"] || "").trim(),
         description: String(r.Description || "").trim(),
+        price: price,
+        unit: String(r.Unit || "").trim() || null,
       };
       if (!data.name) {
         errors.push({ name: "(missing)", error: "Name is required" });
@@ -52,7 +65,12 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ imported, updated, errors });
+  return NextResponse.json({ 
+    imported, 
+    updated, 
+    errors,
+    message: `Processed ${rows.length} rows: ${imported} imported, ${updated} updated, ${errors.length} errors`
+  });
 }
 
 

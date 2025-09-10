@@ -3,6 +3,9 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 export async function createPlant(formData: FormData) {
+  const priceStr = String(formData.get("price") || "");
+  const price = priceStr ? parseFloat(priceStr) : null;
+  
   await prisma.plant.create({
     data: {
       name: String(formData.get("name") || ""),
@@ -13,6 +16,8 @@ export async function createPlant(formData: FormData) {
       description: String(formData.get("description") || ""),
       imageUrl: String(formData.get("imageUrl") || ""),
       category: String(formData.get("category") || ""),
+      price: price,
+      unit: String(formData.get("unit") || "") || null,
     },
   });
   revalidatePath("/admin/plants");
@@ -37,6 +42,7 @@ export async function updatePlant(formData: FormData) {
     "matureSize",
     "description",
     "imageUrl",
+    "unit",
   ] as const;
   for (const f of fields) {
     const v = formData.get(f);
@@ -44,6 +50,12 @@ export async function updatePlant(formData: FormData) {
   }
   const isNative = formData.get("isNative");
   if (typeof isNative === "string") data.isNative = isNative === "true" || isNative === "on";
+  
+  const priceStr = String(formData.get("price") || "");
+  if (priceStr) {
+    data.price = parseFloat(priceStr) || null;
+  }
+  
   if (Object.keys(data).length === 0) return;
   await prisma.plant.update({ where: { id }, data });
   revalidatePath("/admin/plants");

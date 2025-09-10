@@ -49,7 +49,9 @@ export function AdminPlantAddForm({ categories, lightNeeds }: Props) {
       </div>
 
       <input name="matureSize" placeholder="Mature size" className="border rounded px-2 py-1" />
-      <input name="imageUrl" placeholder="Image URL (https://) optional" className="border rounded px-2 py-1 sm:col-span-2" />
+      <input name="imageUrl" placeholder="Image URL (https://) optional" className="border rounded px-2 py-1" />
+      <input name="price" type="number" step="0.01" placeholder="Price" className="border rounded px-2 py-1" />
+      <input name="unit" placeholder="Unit (each, flat, etc.)" className="border rounded px-2 py-1" />
       <textarea name="description" placeholder="Description" className="border rounded px-2 py-1 sm:col-span-2" />
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isNative" /> Native</label>
       <button className="brand-btn px-3 py-1.5 rounded-md font-semibold">Add Plant</button>

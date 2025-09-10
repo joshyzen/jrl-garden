@@ -6,6 +6,7 @@ export async function createPlant(formData: FormData) {
   await prisma.plant.create({
     data: {
       name: String(formData.get("name") || ""),
+      scientificName: String(formData.get("scientificName") || ""),
       isNative: Boolean(formData.get("isNative")),
       lightNeeds: String(formData.get("lightNeeds") || ""),
       matureSize: String(formData.get("matureSize") || ""),
@@ -21,6 +22,30 @@ export async function deletePlant(formData: FormData) {
   const id = String(formData.get("id"));
   if (!id) return;
   await prisma.plant.delete({ where: { id } });
+  revalidatePath("/admin/plants");
+}
+
+export async function updatePlant(formData: FormData) {
+  const id = String(formData.get("id"));
+  if (!id) return;
+  const data: Record<string, unknown> = {};
+  const fields = [
+    "name",
+    "scientificName",
+    "category",
+    "lightNeeds",
+    "matureSize",
+    "description",
+    "imageUrl",
+  ] as const;
+  for (const f of fields) {
+    const v = formData.get(f);
+    if (typeof v === "string") data[f] = v;
+  }
+  const isNative = formData.get("isNative");
+  if (typeof isNative === "string") data.isNative = isNative === "true" || isNative === "on";
+  if (Object.keys(data).length === 0) return;
+  await prisma.plant.update({ where: { id }, data });
   revalidatePath("/admin/plants");
 }
 
@@ -81,6 +106,16 @@ export async function markEstimateStatus(formData: FormData) {
   const status = String(formData.get("status") || "pending");
   if (!id) return;
   await prisma.estimate.update({ where: { id }, data: { status } });
+  revalidatePath("/admin/estimates");
+}
+
+export async function updateEstimateLabor(formData: FormData) {
+  const id = String(formData.get("id"));
+  const laborRaw = String(formData.get("labor") || "0");
+  if (!id) return;
+  const labor = Number(laborRaw);
+  if (Number.isNaN(labor)) return;
+  await prisma.estimate.update({ where: { id }, data: { labor } });
   revalidatePath("/admin/estimates");
 }
 

@@ -2,7 +2,7 @@ import type { Estimate } from "@prisma/client";
 
 export function formatEstimateText(estimate: Estimate): string {
   const lines: string[] = [];
-  lines.push("JRL Garden - Josh Race Landscaping");
+  lines.push("Josh Race Landscaping - jrl.garden");
   lines.push(`Estimate for ${estimate.clientName}:`);
   lines.push("");
 
@@ -15,7 +15,13 @@ export function formatEstimateText(estimate: Estimate): string {
     lines.push(`${item.name}${qtyLabel}: ${priceLabel}`.trim());
   }
   lines.push("");
-  lines.push(`Total: $${Math.round(estimate.total).toLocaleString()}`);
+  const materialsSubtotal = Math.round(estimate.total || 0);
+  const laborSubtotal = Math.round(Number(estimate.labor) || 0);
+  const grandTotal = materialsSubtotal + laborSubtotal;
+
+  lines.push(`Materials Subtotal: $${materialsSubtotal.toLocaleString()}`);
+  lines.push(`Labor Subtotal: $${laborSubtotal.toLocaleString()}`);
+  lines.push(`Total: $${grandTotal.toLocaleString()}`);
   lines.push("");
   lines.push("Call/text: 904-640-9088");
   return lines.join("\n");

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JRL Garden – Josh Race Landscaping",
+  title: "Josh Race Landscape – jrl.garden",
   description: "Mobile-first landscaping gallery and estimate system for JRL Garden",
 };
 
@@ -22,16 +22,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const logoUrl = process.env.NEXT_PUBLIC_BRAND_LOGO_URL || "/logo.png";
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased max-w-3xl mx-auto px-4`}>
         <header className="sticky top-0 z-10 bg-[var(--background)]/95 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/80 border-b border-[rgba(45,80,22,0.15)]">
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-[var(--foreground)]" />
+              <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-full object-cover border border-[rgba(45,80,22,0.2)] bg-[var(--foreground)]/5" />
               <div className="leading-tight">
-                <div className="text-lg font-semibold tracking-tight">JRL Garden</div>
-                <div className="text-xs opacity-80">Josh Race Landscaping</div>
+                <div className="text-lg font-semibold tracking-tight">Josh Race Landscape</div>
+                <div className="text-xs opacity-80">jrl.garden</div>
               </div>
             </div>
             <a href="tel:19046409088" className="text-sm font-semibold brand-btn px-3 py-1.5 rounded-md shadow-sm active:opacity-90">

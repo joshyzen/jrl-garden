@@ -17,13 +17,15 @@ datasource db {
 model Plant {
   id          String   @id @default(cuid())
   name        String
+  scientificName String?
   isNative    Boolean
   lightNeeds  String
   matureSize  String
   description String
-  imageUrl    String
+  imageUrl    String?
   category    String
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model ServiceItem {
@@ -42,6 +44,7 @@ model Estimate {
   address    String
   items      Json
   total      Float
+  labor      Float    @default(0)
   status     String   @default("pending")
   createdAt  DateTime @default(now())
 }

@@ -8,6 +8,14 @@ export default async function PlantDetail({ params }: { params: Promise<{ id: st
 
   return (
     <article className="space-y-3">
+      <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-[rgba(245,240,232,0.95)] backdrop-blur supports-[backdrop-filter]:bg-[rgba(245,240,232,0.6)] flex items-center gap-3 border-b border-[rgba(45,80,22,0.12)]">
+        <a href="/plants" className="brand-btn px-3 py-1.5 rounded-md text-sm">Back</a>
+        <div className="text-sm truncate">
+          <span className="opacity-60">Plants</span>
+          <span className="opacity-60"> / </span>
+          <span className="opacity-80">{plant.category}</span>
+        </div>
+      </div>
       <div className="overflow-hidden rounded-xl border border-[rgba(45,80,22,0.15)]">
         <div className="aspect-[4/3] bg-[rgba(45,80,22,0.08)]">
           {plant.imageUrl?.startsWith("http") ? (
@@ -26,6 +34,7 @@ export default async function PlantDetail({ params }: { params: Promise<{ id: st
       </header>
       <p className="text-sm leading-6 opacity-90">{plant.description}</p>
       <div className="text-xs opacity-60">Category: {plant.category}</div>
+      <a href="/plants" className="fixed right-3 bottom-3 brand-btn px-3 py-2 rounded-md text-sm shadow-md sm:hidden">Back to Plants</a>
     </article>
   );
 }

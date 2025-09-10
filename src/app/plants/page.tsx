@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PlantsFilterBar } from "@/components/PlantsFilterBar";
 
 const categories = [
   "All",
@@ -10,38 +11,24 @@ const categories = [
 
 export const revalidate = 30;
 
-async function getPlants(category?: string) {
-  if (!category || category === "All") {
-    return prisma.plant.findMany({ orderBy: { createdAt: "desc" } });
-  }
-  return prisma.plant.findMany({
-    where: { category },
-    orderBy: { createdAt: "desc" },
-  });
+async function getPlants(params: { category?: string; q?: string; lightNeeds?: string; matureSize?: string; native?: string }) {
+  const where: any = {};
+  if (params.category) where.category = params.category;
+  if (params.lightNeeds) where.lightNeeds = params.lightNeeds;
+  if (params.matureSize) where.matureSize = params.matureSize;
+  if (params.native === "true") where.isNative = true;
+  if (params.native === "false") where.isNative = false;
+  if (params.q) where.name = { contains: params.q, mode: "insensitive" };
+  return prisma.plant.findMany({ where, orderBy: { createdAt: "desc" } });
 }
 
-export default async function PlantsPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
+export default async function PlantsPage({ searchParams }: { searchParams: Promise<{ category?: string; q?: string; lightNeeds?: string; matureSize?: string; native?: string }> }) {
   const resolved = await searchParams;
-  const currentCategory = resolved?.c ?? "All";
-  const plants = await getPlants(currentCategory);
+  const plants = await getPlants(resolved || {} as any);
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-        {categories.map((c) => {
-          const active = c === currentCategory;
-          const href = c === "All" ? "/plants" : `/plants?c=${encodeURIComponent(c)}`;
-          return (
-            <a
-              key={c}
-              href={href}
-              className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap border ${active ? "brand-btn border-transparent" : "bg-white/60 border-[rgba(45,80,22,0.2)]"}`}
-            >
-              {c}
-            </a>
-          );
-        })}
-      </div>
+      <PlantsFilterBar />
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {plants.map((p) => (

@@ -2,23 +2,22 @@ import { prisma } from "@/lib/prisma";
 import { createPlant, deletePlant, updatePlant } from "../actions";
 import { PlantPhotoUploader } from "@/components/PlantPhotoUploader";
 import { PlantsCsvImport } from "@/components/PlantsCsvImport";
+import { AdminPlantAddForm } from "@/components/AdminPlantAddForm";
 
 export default async function AdminPlants() {
-  const plants = await prisma.plant.findMany({ orderBy: { createdAt: "desc" } });
+  const [plants, categories, lightNeeds] = await Promise.all([
+    prisma.plant.findMany({ orderBy: { createdAt: "desc" } }),
+    prisma.plant
+      .findMany({ distinct: ["category"], select: { category: true } })
+      .then((rows) => rows.map((r) => r.category).filter(Boolean).sort()),
+    prisma.plant
+      .findMany({ distinct: ["lightNeeds"], select: { lightNeeds: true } })
+      .then((rows) => rows.map((r) => r.lightNeeds).filter(Boolean).sort()),
+  ]);
   return (
     <div className="space-y-3">
       <h1 className="text-xl font-semibold">Plants</h1>
-      <form action={createPlant} className="brand-card p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <input name="name" placeholder="Name" className="border rounded px-2 py-1" />
-        <input name="scientificName" placeholder="Scientific name (optional)" className="border rounded px-2 py-1" />
-        <input name="category" placeholder="Category" className="border rounded px-2 py-1" />
-        <input name="lightNeeds" placeholder="Light needs" className="border rounded px-2 py-1" />
-        <input name="matureSize" placeholder="Mature size" className="border rounded px-2 py-1" />
-        <input name="imageUrl" placeholder="Image URL (https://) optional" className="border rounded px-2 py-1 col-span-full" />
-        <textarea name="description" placeholder="Description" className="border rounded px-2 py-1 col-span-full" />
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isNative" /> Native</label>
-        <button className="brand-btn px-3 py-1.5 rounded-md font-semibold">Add Plant</button>
-      </form>
+      <AdminPlantAddForm categories={categories} lightNeeds={lightNeeds} />
       <div className="brand-card p-3">
         <h2 className="font-semibold mb-2">Bulk Import Plants</h2>
         <PlantsCsvImport />

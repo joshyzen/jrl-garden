@@ -42,7 +42,7 @@ export default function RootLayout({
               <img src={logoUrl} alt="Logo" className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-[rgba(45,80,22,0.2)] bg-[var(--foreground)]/5" />
               <div className="leading-tight min-w-0">
                 <div className="text-lg font-semibold tracking-tight truncate">Josh Race Landscaping</div>
-                <div className="text-xs opacity-80 truncate">https://jrl.garden | 904-640-9088</div>
+                <div className="text-xs opacity-80 truncate">904-640-9088</div>
               </div>
             </a>
             <a href="/estimate" className="text-xs font-semibold brand-btn px-2 py-1.5 rounded-md shadow-sm active:opacity-90 text-center leading-tight whitespace-nowrap sm:whitespace-normal sm:px-3 sm:text-sm flex-shrink-0">

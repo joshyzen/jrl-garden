@@ -7,7 +7,8 @@ export async function GET() {
       where: {
         AND: [
           { price: { not: null, gt: 0 } },
-          { unit: { not: null, not: "" } }
+          { unit: { not: null } },
+          { unit: { not: "" } }
         ]
       },
       select: {

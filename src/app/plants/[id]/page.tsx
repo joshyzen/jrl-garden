@@ -18,7 +18,6 @@ export default async function PlantDetail({ params }: { params: Promise<{ id: st
         </div>
       </div>
       {/* Client carousel for interactivity */}
-      { /* @ts-expect-error Client Component inline */ }
       <PlantCarousel
         images={plant.images.length ? plant.images.map((i) => ({ id: i.id, url: i.url })) : (plant.imageUrl ? [{ id: "legacy", url: plant.imageUrl }] : [])}
         name={plant.name}

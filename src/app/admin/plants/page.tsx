@@ -32,7 +32,6 @@ export default async function AdminPlants() {
             <div className="flex items-center justify-between">
               <div className="text-sm opacity-70">{p.category || "Uncategorized"}</div>
               <div className="flex items-center gap-2">
-                { /* @ts-expect-error Client Component */ }
                 <PlantImagesButton plantId={p.id} className="brand-btn px-3 py-1.5 rounded-md text-sm" />
                 <form action={deletePlant}>
                   <input type="hidden" name="id" value={p.id} />
@@ -120,7 +119,6 @@ export default async function AdminPlants() {
               <td className="text-right flex items-center gap-2 justify-end">
                 {/* Open images modal */}
                 {/* Use anchor with query param to keep server component simple */}
-                { /* @ts-expect-error Client Component */ }
                 <PlantImagesButton plantId={p.id} className="brand-btn px-3 py-1.5 rounded-md text-sm" />
                 <form action={deletePlant}>
                   <input type="hidden" name="id" value={p.id} />

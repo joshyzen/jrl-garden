@@ -40,7 +40,6 @@ export default function EstimateWizard() {
   const [addressError, setAddressError] = useState("");
   const [detailsError, setDetailsError] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [showAllPlants, setShowAllPlants] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -346,81 +345,72 @@ export default function EstimateWizard() {
               No plants with pricing available. Add prices to plants in the admin panel to include them in estimates.
             </div>
           )}
-          {favoritePlants.length > 0 && (
-            <div className="space-y-2">
-              <div className="font-medium text-sm">⭐ Your Favorites</div>
-              <div className="space-y-2">
-                {favoritePlants.map((plant) => {
-                  const qty = plantCart[plant.id] ?? 0;
-                  const subtotal = qty * plant.price;
-                  return (
-                    <div key={plant.id} className="grid grid-cols-[1fr_10ch_6ch_11ch] gap-4 items-center py-2 border-b border-[rgba(45,80,22,0.1)]">
-                      <div className="text-sm">
-                        <div className="font-medium">{plant.name}</div>
-                        <div className="text-xs opacity-70">{plant.category} • {plant.lightNeeds}</div>
-                      </div>
-                      <div className="text-sm tabular-nums">${plant.price.toFixed(2)}</div>
-                      <input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={qty}
-                        onChange={(e) => setPlantCart((prev) => ({ ...prev, [plant.id]: Number(e.target.value) }))}
-                        className="w-[6ch] border rounded px-2 py-1 text-sm text-center tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="qty"
-                      />
-                      <div className="text-sm tabular-nums">${subtotal.toFixed(2)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
           
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowAllPlants(!showAllPlants)}
-              className="text-sm font-medium flex items-center gap-2"
-            >
-              Browse All Plants
-              <svg
-                className={`w-4 h-4 transition-transform ${showAllPlants ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            {showAllPlants && (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {nonFavoritePlants.map((plant) => {
-                  const qty = plantCart[plant.id] ?? 0;
-                  const subtotal = qty * plant.price;
-                  return (
-                    <div key={plant.id} className="grid grid-cols-[1fr_10ch_6ch_11ch] gap-4 items-center py-2 border-b border-[rgba(45,80,22,0.1)]">
-                      <div className="text-sm">
-                        <div className="font-medium">{plant.name}</div>
-                        <div className="text-xs opacity-70">{plant.category} • {plant.lightNeeds}</div>
-                      </div>
-                      <div className="text-sm tabular-nums">${plant.price.toFixed(2)}</div>
-                      <input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={qty}
-                        onChange={(e) => setPlantCart((prev) => ({ ...prev, [plant.id]: Number(e.target.value) }))}
-                        className="w-[6ch] border rounded px-2 py-1 text-sm text-center tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="qty"
-                      />
-                      <div className="text-sm tabular-nums">${subtotal.toFixed(2)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {plants.length > 0 && (
+            <>
+              {favoritePlants.length > 0 && (
+                <div className="space-y-2">
+                  <div className="font-medium text-sm">⭐ Your Favorites</div>
+                  <div className="space-y-2">
+                    {favoritePlants.map((plant) => {
+                      const qty = plantCart[plant.id] ?? 0;
+                      const subtotal = qty * plant.price;
+                      return (
+                        <div key={plant.id} className="grid grid-cols-[1fr_10ch_6ch_11ch] gap-4 items-center py-2 border-b border-[rgba(45,80,22,0.1)]">
+                          <div className="text-sm">
+                            <div className="font-medium">{plant.name}</div>
+                            <div className="text-xs opacity-70">{plant.category} • {plant.lightNeeds}</div>
+                          </div>
+                          <div className="text-sm tabular-nums">${plant.price.toFixed(2)}</div>
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={qty}
+                            onChange={(e) => setPlantCart((prev) => ({ ...prev, [plant.id]: Number(e.target.value) }))}
+                            className="w-[6ch] border rounded px-2 py-1 text-sm text-center tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            placeholder="qty"
+                          />
+                          <div className="text-sm tabular-nums">${subtotal.toFixed(2)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {nonFavoritePlants.length > 0 && (
+                <div className="space-y-2">
+                  <div className="font-medium text-sm">All Plants</div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {nonFavoritePlants.map((plant) => {
+                      const qty = plantCart[plant.id] ?? 0;
+                      const subtotal = qty * plant.price;
+                      return (
+                        <div key={plant.id} className="grid grid-cols-[1fr_10ch_6ch_11ch] gap-4 items-center py-2 border-b border-[rgba(45,80,22,0.1)]">
+                          <div className="text-sm">
+                            <div className="font-medium">{plant.name}</div>
+                            <div className="text-xs opacity-70">{plant.category} • {plant.lightNeeds}</div>
+                          </div>
+                          <div className="text-sm tabular-nums">${plant.price.toFixed(2)}</div>
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={qty}
+                            onChange={(e) => setPlantCart((prev) => ({ ...prev, [plant.id]: Number(e.target.value) }))}
+                            className="w-[6ch] border rounded px-2 py-1 text-sm text-center tabular-nums [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            placeholder="qty"
+                          />
+                          <div className="text-sm tabular-nums">${subtotal.toFixed(2)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </CollapsibleSection>
 

@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { CollapsibleSection } from "@/components/CollapsibleSection";
-import { PlantCard } from "@/components/PlantCard";
 import { getFavorites } from "@/lib/favorites";
+import Link from "next/link";
 
 type ServiceItem = {
   id: string;
@@ -39,12 +39,6 @@ export default function EstimateWizard() {
   const [nameError, setNameError] = useState("");
   const [addressError, setAddressError] = useState("");
   const [detailsError, setDetailsError] = useState("");
-  const [calcModal, setCalcModal] = useState(false);
-  const [lengthFt, setLengthFt] = useState<number | "">("");
-  const [widthFt, setWidthFt] = useState<number | "">("");
-  const [areaFt, setAreaFt] = useState<number | "">("");
-  const [depthIn, setDepthIn] = useState<number>(3);
-  const [material, setMaterial] = useState<string>("Rock");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showAllPlants, setShowAllPlants] = useState(false);
 
@@ -313,74 +307,11 @@ export default function EstimateWizard() {
       {/* Calculating Quantities helper */}
       <div className="brand-card p-3 space-y-2">
         <div className="font-semibold">Calculating Quantities</div>
-        <div className="text-sm">Quick tips for figuring out yards and bags. Open the calculator for exact numbers.</div>
-        <button onClick={() => setCalcModal(true)} className="brand-btn px-3 py-1.5 rounded-md text-sm w-fit">Open Calculator</button>
+        <div className="text-sm">Quick tips for figuring out yards and bags. Use our calculator for exact numbers.</div>
+        <Link href="/estimate/calculator" className="brand-btn px-3 py-1.5 rounded-md text-sm w-fit inline-block">
+          Open Calculator
+        </Link>
       </div>
-
-      {calcModal && (
-        <div className="fixed inset-0 z-40 bg-black/70" onClick={() => setCalcModal(false)}>
-          <div className="absolute inset-x-0 bottom-0 sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto bg-white text-black rounded-t-2xl sm:rounded-2xl p-4 max-w-2xl mx-auto space-y-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <div className="font-semibold text-black">Calculating Quantities</div>
-              <button className="text-sm text-black border border-black rounded px-2 py-1" onClick={() => setCalcModal(false)}>Close</button>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-2 text-sm">
-                <div className="font-medium">Coverage per cubic yard</div>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Mulch: 1 yd³ covers ~160 sq ft at 2″</li>
-                  <li>Rock: 1 yd³ covers ~100 sq ft at 3″ (or ~80 sq ft at 4″)</li>
-                  <li>Topsoil: 1 yd³ covers ~100 sq ft at 3″</li>
-                </ul>
-                <div className="font-medium pt-2">Bags vs. Yards</div>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>1 cubic yard = 27 cubic feet. ≈ 14 big bags (2 cu ft each)</li>
-                  <li>Example: 14 bags × $3.50 ≈ $49 — 1 yd bulk = $40</li>
-                </ul>
-                <div className="font-medium pt-2">Recommended Depths</div>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Mulch: 2–3″ for beds, 3–4″ for weed control</li>
-                  <li>Rock: 3–4″ for full coverage</li>
-                  <li>Topsoil: 2–4″ for leveling or bed prep</li>
-                </ul>
-              </div>
-              <hr className="border-black/20" />
-              <div className="space-y-2">
-                <div className="font-medium">Calculator</div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input type="number" min={0} value={lengthFt} onChange={(e) => setLengthFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="length (ft)" className="border border-black/40 rounded px-2 py-2" />
-                  <input type="number" min={0} value={widthFt} onChange={(e) => setWidthFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="width (ft)" className="border border-black/40 rounded px-2 py-2" />
-                  <input type="number" min={0} value={areaFt} onChange={(e) => setAreaFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="or area (sq ft)" className="border border-black/40 rounded px-2 py-2 sm:col-span-2" />
-                  <input type="number" min={1} step={0.5} value={depthIn} onChange={(e) => setDepthIn(Number(e.target.value))} placeholder="depth (inches)" className="border border-black/40 rounded px-2 py-2" />
-                  <select value={material} onChange={(e) => setMaterial(e.target.value)} className="border border-black/40 rounded px-2 py-2">
-                    <option>Rock</option>
-                    <option>Mulch</option>
-                    <option>Topsoil</option>
-                  </select>
-                </div>
-                {(() => {
-                  const area = (areaFt || 0) || (((lengthFt || 0) * (widthFt || 0)) || 0);
-                  const cubicFeet = area * (depthIn / 12);
-                  const yards = cubicFeet / 27;
-                  const bags = Math.ceil(yards * 13);
-                  const covPerYd = material === "Mulch" ? 160 : 100;
-                  const covAtDepth = material === "Mulch" ? 2 : 3; // base depths
-                  const coverage = covPerYd * (covAtDepth / Math.max(depthIn, 0.1));
-                  return (
-                    <div className="text-sm space-y-1">
-                      <div>Area used: <span className="font-medium">{area || 0} sq ft</span></div>
-                      <div>Depth: <span className="font-medium">{depthIn}"</span></div>
-                      <div className="font-semibold">You need approximately {yards.toFixed(2)} cubic yards</div>
-                      <div>≈ {bags} big bags (2 cu ft each)</div>
-                      <div>At {depthIn}", 1 yd covers about {Math.round(coverage)} sq ft</div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Plants Section */}
       <CollapsibleSection

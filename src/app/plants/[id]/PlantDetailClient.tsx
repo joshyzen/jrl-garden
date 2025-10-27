@@ -96,13 +96,11 @@ export default function PlantDetailClient({
             <span className="opacity-80">{plant.category}</span>
           </div>
         </div>
-        <button 
+        <HeartIcon 
+          filled={isFavorite}
           onClick={handleFavorite}
-          className="p-2 -mr-2"
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-        >
-          <HeartIcon filled={isFavorite} size={24} />
-        </button>
+          className="scale-125"
+        />
       </div>
 
       {/* Navigation arrows */}

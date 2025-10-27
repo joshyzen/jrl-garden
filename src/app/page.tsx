@@ -44,8 +44,17 @@ export default function Home() {
         </section>
 
         <section className="rounded-xl brand-card p-4">
-          <h2 className="text-xl font-semibold">Our Services</h2>
-          <p className="text-sm opacity-80">Professional landscaping services tailored to your needs. Proudly serving the Gran Lake neighborhood and surrounding areas in Saint Augustine, FL.</p>
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            <img 
+              src="/race-outdoor-badge.png" 
+              alt="Race Outdoor Gardens Lighting Irrigation" 
+              className="w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0"
+            />
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl font-semibold">Our Services</h2>
+              <p className="text-sm opacity-80">Professional landscaping services tailored to your needs. Proudly serving the Gran Lake neighborhood and surrounding areas in Saint Augustine, FL.</p>
+            </div>
+          </div>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {services.map((service) => (
               <div key={service.id} className="flex items-start gap-3 p-3 rounded-lg bg-[rgba(45,80,22,0.05)] border border-[rgba(45,80,22,0.1)]">

@@ -25,7 +25,7 @@ async function getPlants(params: { category?: string; q?: string; lightNeeds?: s
 
 export default async function PlantsPage({ searchParams }: { searchParams: Promise<{ category?: string; q?: string; lightNeeds?: string; matureSize?: string; native?: string }> }) {
   const resolved = await searchParams;
-  const plants = await getPlants(resolved || {} as any);
+  const plants = await getPlants(resolved || {});
 
   return (
     <div className="space-y-4">

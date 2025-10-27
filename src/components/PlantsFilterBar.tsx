@@ -17,6 +17,16 @@ export function PlantsFilterBar() {
 
   useEffect(() => {
     fetch("/api/plants/filters").then((r) => r.json()).then(setOptions);
+    
+    // Load current search params from URL
+    const params = new URLSearchParams(window.location.search);
+    const currentFilters: Filters = { isNative: "all" };
+    if (params.get("q")) currentFilters.q = params.get("q")!;
+    if (params.get("category")) currentFilters.category = params.get("category")!;
+    if (params.get("lightNeeds")) currentFilters.lightNeeds = params.get("lightNeeds")!;
+    if (params.get("matureSize")) currentFilters.matureSize = params.get("matureSize")!;
+    if (params.get("native")) currentFilters.isNative = params.get("native")!;
+    setFilters(currentFilters);
   }, []);
 
   function apply() {
@@ -30,12 +40,144 @@ export function PlantsFilterBar() {
     window.location.href = qs ? `/plants?${qs}` : "/plants";
   }
 
+  function clearFilter(filterKey: keyof Filters) {
+    const newFilters = { ...filters };
+    if (filterKey === "isNative") {
+      newFilters.isNative = "all";
+    } else {
+      delete newFilters[filterKey];
+    }
+    setFilters(newFilters);
+    
+    // Auto-apply the cleared filter
+    const params = new URLSearchParams();
+    if (newFilters.q) params.set("q", newFilters.q);
+    if (newFilters.category) params.set("category", newFilters.category);
+    if (newFilters.lightNeeds) params.set("lightNeeds", newFilters.lightNeeds);
+    if (newFilters.matureSize) params.set("matureSize", newFilters.matureSize);
+    if (newFilters.isNative && newFilters.isNative !== "all") params.set("native", newFilters.isNative);
+    const qs = params.toString();
+    window.location.href = qs ? `/plants?${qs}` : "/plants";
+  }
+
+  function clearAllFilters() {
+    setFilters({ isNative: "all" });
+    window.location.href = "/plants";
+  }
+
+  const hasActiveFilters = filters.q || filters.category || filters.lightNeeds || filters.matureSize || (filters.isNative && filters.isNative !== "all");
+
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <input value={filters.q || ""} onChange={(e) => setFilters({ ...filters, q: e.target.value })} placeholder="Search plants" className="border rounded px-3 py-2 w-full text-base" />
+        <div className="relative w-full">
+          <input 
+            value={filters.q || ""} 
+            onChange={(e) => setFilters({ ...filters, q: e.target.value })} 
+            onKeyDown={(e) => e.key === "Enter" && apply()}
+            placeholder="Search plants" 
+            className="border rounded px-3 py-2 pr-10 w-full text-base" 
+          />
+          {filters.q && (
+            <button
+              onClick={() => {
+                setFilters({ ...filters, q: "" });
+                // Auto-apply when clearing to immediately show all results
+                const params = new URLSearchParams();
+                if (filters.category) params.set("category", filters.category);
+                if (filters.lightNeeds) params.set("lightNeeds", filters.lightNeeds);
+                if (filters.matureSize) params.set("matureSize", filters.matureSize);
+                if (filters.isNative && filters.isNative !== "all") params.set("native", filters.isNative);
+                const qs = params.toString();
+                window.location.href = qs ? `/plants?${qs}` : "/plants";
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+              type="button"
+              aria-label="Clear search"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400 hover:text-gray-600">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        <button onClick={apply} className="brand-btn px-3 py-2 rounded-md text-base">Search</button>
         <button onClick={() => setOpen(true)} className="brand-btn px-3 py-2 rounded-md text-base">Filters</button>
       </div>
+
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-gray-600">Active filters:</span>
+          
+          {filters.category && (
+            <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+              <span>Category: {filters.category}</span>
+              <button
+                onClick={() => clearFilter("category")}
+                className="hover:bg-blue-200 rounded-full p-0.5"
+                aria-label="Clear category filter"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {filters.lightNeeds && (
+            <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+              <span>Light: {filters.lightNeeds}</span>
+              <button
+                onClick={() => clearFilter("lightNeeds")}
+                className="hover:bg-green-200 rounded-full p-0.5"
+                aria-label="Clear light needs filter"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {filters.matureSize && (
+            <div className="flex items-center gap-1 bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">
+              <span>Size: {filters.matureSize}</span>
+              <button
+                onClick={() => clearFilter("matureSize")}
+                className="hover:bg-purple-200 rounded-full p-0.5"
+                aria-label="Clear mature size filter"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {filters.isNative && filters.isNative !== "all" && (
+            <div className="flex items-center gap-1 bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs">
+              <span>Native: {filters.isNative === "true" ? "Yes" : "No"}</span>
+              <button
+                onClick={() => clearFilter("isNative")}
+                className="hover:bg-orange-200 rounded-full p-0.5"
+                aria-label="Clear native filter"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={clearAllFilters}
+            className="text-xs text-gray-500 hover:text-gray-700 underline ml-2"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-30 bg-black/50" onClick={() => setOpen(false)}>

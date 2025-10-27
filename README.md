@@ -1,5 +1,53 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## JRL Garden Web
+
+A landscaping business web application featuring:
+- 🌱 Plant gallery with filtering and favorites
+- 📝 Interactive estimate request form with quantity calculator
+- 🖼️ Image management via Cloudinary
+- 📧 Email notifications for new estimates
+- 👨‍💼 Admin panel for managing plants, services, and estimates
+
+### Tech Stack
+- Next.js 15 with App Router
+- PostgreSQL (Supabase) with Prisma ORM
+- Tailwind CSS v4
+- Cloudinary for image uploads
+- Resend for email notifications
+
+## Environment Setup
+
+1. Copy `.env.example` to `.env.local`:
+```bash
+cp .env.example .env.local
+```
+
+2. Configure the required environment variables:
+
+**Database (Supabase):**
+- `DATABASE_URL` - Your PostgreSQL connection string
+- `DIRECT_URL` - Direct PostgreSQL connection (for migrations)
+
+**Cloudinary (for plant images):**
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` - Your Cloudinary cloud name
+- `CLOUDINARY_API_KEY` - Your Cloudinary API key
+- `CLOUDINARY_API_SECRET` - Your Cloudinary API secret
+
+**Resend (for email notifications):**
+- `RESEND_API_KEY` - Your Resend API key (get one at [resend.com](https://resend.com))
+
+**Google Maps (for address autocomplete):**
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` - Your Google Maps API key with Places API enabled (get one at [Google Cloud Console](https://console.cloud.google.com))
+  - Enable the "Places API" for your project
+  - Restrict the key to your domain in production
+
+3. Set up the database:
+```bash
+npm run prisma:push
+npm run prisma:seed
+```
+
 ## Getting Started
 
 First, run the development server:

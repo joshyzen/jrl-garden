@@ -35,6 +35,10 @@ export default function EstimateWizard() {
   const [address, setAddress] = useState("");
   const [details, setDetails] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [phoneError, setPhoneError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [addressError, setAddressError] = useState("");
+  const [detailsError, setDetailsError] = useState("");
   const [calcModal, setCalcModal] = useState(false);
   const [lengthFt, setLengthFt] = useState<number | "">("");
   const [widthFt, setWidthFt] = useState<number | "">("");
@@ -59,6 +63,28 @@ export default function EstimateWizard() {
       setLoading(false);
     })();
   }, []);
+
+  // Initialize Google Places Autocomplete
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.google) return;
+    
+    const input = document.getElementById('address-autocomplete') as HTMLInputElement;
+    if (!input) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'us' },
+      fields: ['address_components', 'formatted_address'],
+      types: ['address'],
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place.formatted_address) {
+        setAddress(place.formatted_address);
+        setAddressError("");
+      }
+    });
+  }, [loading]);
 
   const grouped = useMemo(() => {
     const bySection: Record<string, Record<string, ServiceItem[]>> = {};
@@ -88,6 +114,48 @@ export default function EstimateWizard() {
   }, [cart, plantCart, items, plants]);
 
   async function submitEstimate() {
+    // Reset all errors
+    setNameError("");
+    setPhoneError("");
+    setAddressError("");
+    setDetailsError("");
+    
+    let hasError = false;
+    
+    // Validate name
+    if (!clientName.trim()) {
+      setNameError("Name is required");
+      hasError = true;
+    }
+    
+    // Validate phone number
+    const phoneRegex = /^[\d\s\-\(\)\+\.]+$/;
+    const digitsOnly = phone.replace(/\D/g, '');
+    
+    if (!phone.trim()) {
+      setPhoneError("Phone number is required");
+      hasError = true;
+    } else if (!phoneRegex.test(phone) || digitsOnly.length < 10) {
+      setPhoneError("Please enter a valid phone number (at least 10 digits)");
+      hasError = true;
+    }
+    
+    // Validate address
+    if (!address.trim()) {
+      setAddressError("Address is required");
+      hasError = true;
+    }
+    
+    // Validate details
+    if (!details.trim()) {
+      setDetailsError("Please describe what you need done");
+      hasError = true;
+    }
+    
+    if (hasError) {
+      return;
+    }
+
     const serviceItems = Object.entries(cart)
       .filter(([_, q]) => Number(q) > 0)
       .map(([id, qty]) => {
@@ -133,7 +201,21 @@ export default function EstimateWizard() {
       if (res.ok) {
         window.location.href = "/estimate/success";
       } else {
-        alert("Failed to submit estimate");
+        const data = await res.json();
+        const errorMsg = data.error || "Failed to submit estimate";
+        
+        // Map backend errors to form fields
+        if (errorMsg.toLowerCase().includes('name')) {
+          setNameError(errorMsg);
+        } else if (errorMsg.toLowerCase().includes('phone')) {
+          setPhoneError(errorMsg);
+        } else if (errorMsg.toLowerCase().includes('address')) {
+          setAddressError(errorMsg);
+        } else if (errorMsg.toLowerCase().includes('describe') || errorMsg.toLowerCase().includes('details')) {
+          setDetailsError(errorMsg);
+        } else {
+          alert(errorMsg);
+        }
       }
     });
   }
@@ -175,10 +257,56 @@ export default function EstimateWizard() {
       <h1 className="text-2xl font-semibold">Request an Estimate</h1>
       <div className="brand-card p-3 space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Your name" className="border rounded px-2 py-1" />
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="border rounded px-2 py-1" />
-          <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Address" className="border rounded px-2 py-1 sm:col-span-2" />
-          <textarea value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Describe what you want to change / need done." className="border rounded px-2 py-1 sm:col-span-2" />
+          <div className="sm:col-span-1">
+            <input 
+              value={clientName} 
+              onChange={(e) => {
+                setClientName(e.target.value);
+                setNameError("");
+              }} 
+              placeholder="Your name" 
+              className={`border rounded px-2 py-1 w-full ${nameError ? 'border-red-500' : ''}`}
+            />
+            {nameError && <div className="text-red-600 text-xs mt-1">{nameError}</div>}
+          </div>
+          <div className="sm:col-span-1">
+            <input 
+              value={phone} 
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setPhoneError("");
+              }} 
+              placeholder="Phone" 
+              type="tel"
+              className={`border rounded px-2 py-1 w-full ${phoneError ? 'border-red-500' : ''}`}
+            />
+            {phoneError && <div className="text-red-600 text-xs mt-1">{phoneError}</div>}
+          </div>
+          <div className="sm:col-span-2">
+            <input 
+              value={address} 
+              onChange={(e) => {
+                setAddress(e.target.value);
+                setAddressError("");
+              }} 
+              placeholder="Address" 
+              id="address-autocomplete"
+              className={`border rounded px-2 py-1 w-full ${addressError ? 'border-red-500' : ''}`}
+            />
+            {addressError && <div className="text-red-600 text-xs mt-1">{addressError}</div>}
+          </div>
+          <div className="sm:col-span-2">
+            <textarea 
+              value={details} 
+              onChange={(e) => {
+                setDetails(e.target.value);
+                setDetailsError("");
+              }} 
+              placeholder="Describe what you want to change / need done." 
+              className={`border rounded px-2 py-1 w-full ${detailsError ? 'border-red-500' : ''}`}
+            />
+            {detailsError && <div className="text-red-600 text-xs mt-1">{detailsError}</div>}
+          </div>
         </div>
       </div>
 

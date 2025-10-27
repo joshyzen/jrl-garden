@@ -10,7 +10,7 @@ export default function Home() {
     return (
       <div className="space-y-4">
         <section className="rounded-xl brand-card p-4">
-          <h1 className="text-2xl font-semibold">Plant Gallery</h1>
+          <h1 className="text-2xl font-semibold">Plants, Shrubs & Trees Gallery</h1>
           <p className="text-sm opacity-80">Curated, Florida-friendly selections for sun, shade, and drought tolerance.</p>
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
             {plants.map((p) => (

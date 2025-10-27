@@ -58,6 +58,27 @@ export default function EstimateWizard() {
     })();
   }, []);
 
+  // Reload favorites when page becomes visible (user returns from plants page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setFavorites(getFavorites());
+      }
+    };
+
+    const handleFocus = () => {
+      setFavorites(getFavorites());
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // Initialize Google Places Autocomplete
   useEffect(() => {
     if (typeof window === 'undefined' || !window.google) return;

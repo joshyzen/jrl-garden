@@ -50,7 +50,7 @@ npm run prisma:seed
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies and run the development server:
 
 ```bash
 npm run dev

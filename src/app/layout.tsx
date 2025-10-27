@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Josh Race Landscape – jrl.garden",
+  title: "Josh Race Landscaping – jrl.garden",
   description: "Mobile-first landscaping gallery and estimate system for JRL Garden",
 };
 
@@ -41,7 +41,7 @@ export default function RootLayout({
             <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded-full object-cover border border-[rgba(45,80,22,0.2)] bg-[var(--foreground)]/5" />
               <div className="leading-tight">
-                <div className="text-lg font-semibold tracking-tight">Josh Race Landscape</div>
+                <div className="text-lg font-semibold tracking-tight">Josh Race Landscaping</div>
                 <div className="text-xs opacity-80">https://jrl.garden | 904-640-9088</div>
               </div>
             </a>

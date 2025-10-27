@@ -347,10 +347,10 @@ export default function EstimateWizard() {
               <hr className="border-black/20" />
               <div className="space-y-2">
                 <div className="font-medium">Calculator</div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input type="number" min={0} value={lengthFt} onChange={(e) => setLengthFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="length (ft)" className="border border-black/40 rounded px-2 py-2" />
                   <input type="number" min={0} value={widthFt} onChange={(e) => setWidthFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="width (ft)" className="border border-black/40 rounded px-2 py-2" />
-                  <input type="number" min={0} value={areaFt} onChange={(e) => setAreaFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="or area (sq ft)" className="border border-black/40 rounded px-2 py-2 col-span-2" />
+                  <input type="number" min={0} value={areaFt} onChange={(e) => setAreaFt(e.target.value === "" ? "" : Number(e.target.value))} placeholder="or area (sq ft)" className="border border-black/40 rounded px-2 py-2 sm:col-span-2" />
                   <input type="number" min={1} step={0.5} value={depthIn} onChange={(e) => setDepthIn(Number(e.target.value))} placeholder="depth (inches)" className="border border-black/40 rounded px-2 py-2" />
                   <select value={material} onChange={(e) => setMaterial(e.target.value)} className="border border-black/40 rounded px-2 py-2">
                     <option>Rock</option>

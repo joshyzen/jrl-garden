@@ -1,7 +1,8 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 
-export default function AdminLogin() {
+function LoginForm() {
   const params = useSearchParams();
   const router = useRouter();
   const next = params.get("next") || "/admin";
@@ -28,6 +29,14 @@ export default function AdminLogin() {
       />
       <button className="brand-btn px-4 py-2 rounded-md font-semibold">Sign in</button>
     </form>
+  );
+}
+
+export default function AdminLogin() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
 

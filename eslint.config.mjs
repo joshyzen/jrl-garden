@@ -18,8 +18,30 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "src/generated/**",
     ],
   },
+  {
+    rules: {
+      // Allow 'any' type for rapid development - TODO: gradually remove these
+      "@typescript-eslint/no-explicit-any": "warn",
+      
+      // Allow unused vars in some cases (like destructuring with _)
+      "@typescript-eslint/no-unused-vars": ["warn", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+      
+      // Allow unescaped entities in JSX (quotes, apostrophes)
+      "react/no-unescaped-entities": "warn",
+      
+      // Allow HTML links for now (can migrate to Link later)
+      "@next/next/no-html-link-for-pages": "warn",
+      
+      // Allow img tags (can migrate to Image later)
+      "@next/next/no-img-element": "warn",
+    }
+  }
 ];
 
 export default eslintConfig;

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Josh Race Landscaping – jrl.garden",
+  title: "Race Outdoor - Gardens, Lighting, Irrigation",
   description: "Mobile-first landscaping gallery and estimate system for JRL Garden",
 };
 

@@ -101,32 +101,44 @@
   <div id="legend">
     <h3>Components</h3>
     <div class="leg-row"><span class="swatch" style="background:#6B4220"></span>Posts — 6×6 nominal</div>
+    <div class="leg-row" id="l0-legend-row"><span class="swatch" style="background:#8B5E30"></span>L0 Cross-Beams — 2×8, Z-span</div>
     <div class="leg-row"><span class="swatch" style="background:#A07848"></span>L1 Beams — 2×8, X-span</div>
     <div class="leg-row"><span class="swatch" style="background:#7A5528"></span>L2 Rafters — 4×6, Z-span</div>
     <div class="leg-row" id="l3-legend-row" style="display:none"><span class="swatch" style="background:#C8A464"></span>L3 Slats — 2×2, X-span</div>
-    <div class="leg-row"><span class="swatch" style="background:#C0B8A8"></span>Concrete footings — 14″ dia</div>
+    <div class="leg-row"><span class="swatch" style="background:#C0B8A8"></span>Concrete Footers — 12″ dia</div>
     <hr class="leg-divider">
     <div class="leg-row"><span class="swatch" style="background:#A8A8A8"></span>#67 granite gravel</div>
     <div class="leg-row"><span class="swatch" style="background:linear-gradient(to right,#C4803A 50%,#1C1C1C 50%)"></span>Swing — Cedar &amp; Black</div>
     <hr class="leg-divider">
     <h3>Measurements</h3>
-    <div class="leg-row meas-row"><span class="meas-label">Length</span><span class="meas-val">9 ft</span></div>
-    <div class="leg-row meas-row"><span class="meas-label">Width</span><span class="meas-val">5 ft</span></div>
-    <div class="leg-row meas-row"><span class="meas-label">Height</span><span class="meas-val" id="legend-h">10.0 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Footprint</span><span class="meas-val">9 × 5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Height</span><span class="meas-val" id="legend-h">9.0 ft</span></div>
     <div class="leg-row meas-row"><span class="meas-label">Rafter spacing</span><span class="meas-val" id="legend-spacing">21.6 in o.c.</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L0 length</span><span class="meas-val">7.5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L1 length</span><span class="meas-val">11.5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L2 length</span><span class="meas-val">8 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Swing length</span><span class="meas-val">5 ft</span></div>
+    <hr class="leg-divider">
+    <h3>Overhangs</h3>
+    <div class="leg-row meas-row"><span class="meas-label">L0 each end</span><span class="meas-val">15 in</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L1 each end</span><span class="meas-val">15 in</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L2 each end</span><span class="meas-val">18 in</span></div>
   </div>
 
   <div id="controls">
     <label for="slider">Post Height</label>
-    <input type="range" id="slider" min="7" max="14" step="0.5" value="10">
-    <span id="hval">10.0 ft</span>
+    <input type="range" id="slider" min="7" max="14" step="0.5" value="9">
+    <span id="hval">9.0 ft</span>
     <span class="ctrl-sep"></span>
     <label for="nraf">Rafters</label>
-    <input type="number" id="nraf" min="2" max="20" value="6">
+    <input type="number" id="nraf" min="2" max="20" value="7">
     <span class="ctrl-sep"></span>
     <input type="checkbox" id="l3toggle">
     <label for="l3toggle">L3 Slats</label>
     <input type="number" id="nl3" min="1" max="40" value="8" disabled>
+    <span class="ctrl-sep"></span>
+    <input type="checkbox" id="l0toggle" checked>
+    <label for="l0toggle">L0 Beams</label>
   </div>
 
   <span id="hint">drag · scroll to zoom</span>
@@ -153,12 +165,16 @@ const L2_W    = 0.292;   // 4×6: 3.5-in width
 const L2_H    = 0.458;   // 4×6: 5.5-in height
 
 // Board lengths (span + overhangs)
-const L1_LEN  = 12;      // 9 ft + 1.5 ft overhang each end
+const L1_LEN  = 11.5;    // 9 ft + 1.25 ft overhang each end
 const L2_LEN  =  8;      // 5 ft + 1.5 ft overhang each end
 
 // Crescent arc radii
 const L1_ARC  = 0.40;
 const L2_ARC  = 0.30;
+
+// L0 cross-beams — 2×8, Z-span, underneath L1 (same dimensions as L1)
+const L0_LEN  = 7.5;     // 5 ft + 1.25 ft overhang each end
+const L0_ARC  = 0.40;
 
 // L3 slats — 2×2 nominal (actual 1.5″ × 1.5″), run in X like L1
 const L3_W   = 0.125;   // 1.5 in (Z depth)
@@ -169,6 +185,7 @@ const L3_LEN = L1_LEN;  // same 12-ft span as L1 beams
 const C_POST  = 0x6B4220;
 const C_L1    = 0xA07848;
 const C_L2    = 0x7A5528;
+const C_L0    = 0x8B5E30;  // warm dark brown (Z-span cross-beams)
 const C_L3    = 0xC8A464;  // light pine/cedar
 const C_GND     = 0xD4D0BE;
 const C_FOOTING  = 0xC0B8A8;  // cast concrete grey
@@ -176,7 +193,8 @@ const C_GRAVEL   = 0xA8A8A8;  // neutral grey gravel
 const FOOTING_R  = 7 / 12;    // 7-inch radius → 14-inch diameter footing
 
 // Rafter layout — mutable, driven by the Rafters input
-let nRafters = 6;
+let nRafters = 7;
+let showL0   = true;    // L0 cross-beam toggle
 let showL3   = false;   // L3 slat toggle
 let nL3      = 8;       // number of L3 slats
 const RAFTER_X0      = -4.5;
@@ -197,7 +215,7 @@ const SW_Z0  = SW_ZC - SW_D / 2;   // 1.75 ft  (front edge)
 const SW_Z1  = SW_ZC + SW_D / 2;   // 3.25 ft  (back edge)
 
 // Ergonomic heights (ft from ground, constant regardless of post height)
-const SEAT_Y     = 1.42;              // top of seat slats (~17 in)
+const SEAT_Y     = 1.50;              // top of seat slats (~18 in)
 const ARM_Y      = SEAT_Y + 0.75;    // top of armrests  (~26 in total)
 const BACK_TOP_Y = SEAT_Y + 1.90;    // top of back slats (~40 in total)
 
@@ -318,6 +336,7 @@ function buildPergola(h, n) {
   const geoPool = [];
 
   const matPost = new THREE.MeshLambertMaterial({ color: C_POST });
+  const matL0   = new THREE.MeshLambertMaterial({ color: C_L0   });
   const matL1   = new THREE.MeshLambertMaterial({ color: C_L1   });
   const matL2   = new THREE.MeshLambertMaterial({ color: C_L2   });
 
@@ -346,6 +365,21 @@ function buildPergola(h, n) {
     m.castShadow = m.receiveShadow = true;
     group.add(m);
   });
+
+  // ── L0 Cross-Beams (2×8, Z-span, sandwiches posts in X, sits below L1) ───
+  if (showL0) {
+    const d0    = 0.25 + L1_T / 2;
+    const l0CY  = h - L1_H;
+    const l0Geo = new THREE.ExtrudeGeometry(
+      makeBoardShape(L0_LEN, L1_H, L0_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
+    );
+    l0Geo.translate(0, -L1_H / 2, -L1_T / 2);
+    l0Geo.rotateY(Math.PI / 2);
+    geoPool.push(l0Geo);
+    [-4.5 - d0, -4.5 + d0, 4.5 - d0, 4.5 + d0].forEach(px =>
+      mesh(l0Geo, matL0, px, l0CY, RAFTER_CZ)
+    );
+  }
 
   // ── L1 Beams ─────────────────────────────────────────────────────────────
   const l1Geo = new THREE.ExtrudeGeometry(
@@ -388,7 +422,7 @@ function buildPergola(h, n) {
   }
 
   group._geoPool = geoPool;
-  group._mats    = [matPost, matL1, matL2, matFooting, matL3];
+  group._mats    = [matPost, matL0, matL1, matL2, matFooting, matL3];
   return group;
 }
 
@@ -631,7 +665,7 @@ function rebuild(h, n) {
 // Slider
 // ─────────────────────────────────────────────────────────────────────────────
 
-let curH = 10;
+let curH = 9;
 rebuild(curH, nRafters);
 
 const slider        = document.getElementById('slider');
@@ -678,6 +712,15 @@ nl3Input.addEventListener('input', () => {
   const v = parseInt(nl3Input.value, 10);
   if (!isFinite(v) || v < 1) return;
   nL3 = Math.min(Math.max(v, 1), 40);
+  rebuild(curH, nRafters);
+});
+
+const l0Toggle    = document.getElementById('l0toggle');
+const l0LegendRow = document.getElementById('l0-legend-row');
+
+l0Toggle.addEventListener('change', () => {
+  showL0 = l0Toggle.checked;
+  l0LegendRow.style.display = showL0 ? '' : 'none';
   rebuild(curH, nRafters);
 });
 

@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pergola 3D</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #edeae2;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    #app {
+      position: relative;
+      width: 100%; height: 100%;
+    }
+
+    canvas { display: block; }
+
+    /* ── Legend ────────────────────────────────────────────────── */
+    #legend {
+      position: absolute; top: 18px; right: 18px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 12px; color: #444;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.13);
+      z-index: 10; line-height: 1.7;
+      min-width: 210px;
+    }
+    #legend h3 {
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: #888; margin-bottom: 7px;
+    }
+    .leg-row { display: flex; align-items: center; gap: 9px; }
+    .swatch {
+      width: 13px; height: 13px; border-radius: 2px; flex-shrink: 0;
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+    .leg-divider {
+      border: none; border-top: 1px solid #e8e8e8;
+      margin: 7px 0 5px;
+    }
+    .leg-note {
+      font-size: 11px; color: #888; margin-top: 5px;
+      padding-top: 6px; border-top: 1px solid #e8e8e8;
+    }
+
+    /* ── Measurements section ──────────────────────────────────── */
+    .meas-row {
+      display: flex; justify-content: space-between;
+      align-items: baseline; gap: 16px;
+    }
+    .meas-label { color: #666; }
+    .meas-val   { font-weight: 700; color: #2a2a2a; white-space: nowrap; }
+
+    /* ── Slider panel ──────────────────────────────────────────── */
+    #controls {
+      position: absolute; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.90);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      padding: 11px 24px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.13);
+      user-select: none; z-index: 10;
+    }
+    #controls label { font-size: 13px; color: #555; white-space: nowrap; }
+    #slider { width: 180px; cursor: pointer; accent-color: #7A5528; }
+    #hval { font-size: 14px; font-weight: 700; color: #2a2a2a; min-width: 52px; }
+    .ctrl-sep { width: 1px; height: 22px; background: rgba(0,0,0,0.13); flex-shrink: 0; }
+    #nraf, #nl3 {
+      width: 48px; padding: 3px 5px;
+      font-size: 13px; font-weight: 700; color: #2a2a2a;
+      border: 1px solid rgba(0,0,0,0.18); border-radius: 5px;
+      background: #fff; text-align: center; cursor: text;
+    }
+    #nraf:focus, #nl3:focus { outline: 2px solid #7A5528; outline-offset: 1px; }
+    #nl3:disabled { opacity: 0.38; cursor: not-allowed; }
+    #l3toggle { cursor: pointer; accent-color: #7A5528; width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ── Hint ──────────────────────────────────────────────────── */
+    #hint {
+      position: absolute; bottom: 24px; right: 18px;
+      font-size: 11px; color: #aaa;
+      z-index: 10; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="legend">
+    <h3>Components</h3>
+    <div class="leg-row"><span class="swatch" style="background:#6B4220"></span>Posts — 6×6 nominal</div>
+    <div class="leg-row"><span class="swatch" style="background:#A07848"></span>L1 Beams — 2×8, X-span</div>
+    <div class="leg-row"><span class="swatch" style="background:#7A5528"></span>L2 Rafters — 4×6, Z-span</div>
+    <div class="leg-row" id="l3-legend-row" style="display:none"><span class="swatch" style="background:#C8A464"></span>L3 Slats — 2×2, X-span</div>
+    <div class="leg-row"><span class="swatch" style="background:#C0B8A8"></span>Concrete footings — 14″ dia</div>
+    <hr class="leg-divider">
+    <div class="leg-row"><span class="swatch" style="background:#A8A8A8"></span>#67 granite gravel</div>
+    <div class="leg-row"><span class="swatch" style="background:linear-gradient(to right,#C4803A 50%,#1C1C1C 50%)"></span>Swing — Cedar &amp; Black</div>
+    <hr class="leg-divider">
+    <h3>Measurements</h3>
+    <div class="leg-row meas-row"><span class="meas-label">Length</span><span class="meas-val">9 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Width</span><span class="meas-val">5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Height</span><span class="meas-val" id="legend-h">10.0 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Rafter spacing</span><span class="meas-val" id="legend-spacing">21.6 in o.c.</span></div>
+  </div>
+
+  <div id="controls">
+    <label for="slider">Post Height</label>
+    <input type="range" id="slider" min="7" max="14" step="0.5" value="10">
+    <span id="hval">10.0 ft</span>
+    <span class="ctrl-sep"></span>
+    <label for="nraf">Rafters</label>
+    <input type="number" id="nraf" min="2" max="20" value="6">
+    <span class="ctrl-sep"></span>
+    <input type="checkbox" id="l3toggle">
+    <label for="l3toggle">L3 Slats</label>
+    <input type="number" id="nl3" min="1" max="40" value="8" disabled>
+  </div>
+
+  <span id="hint">drag · scroll to zoom</span>
+
+</div>
+
+<!-- Three.js r128 -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+(function () {
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants  (all units in feet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Lumber actual dimensions
+const POST_W  = 0.500;   // 6-in square (nominal 6×6)
+const L1_H    = 0.625;   // 2×8: 7.5-in height
+const L1_T    = 0.125;   // 2×8: 1.5-in thickness
+const L2_W    = 0.292;   // 4×6: 3.5-in width
+const L2_H    = 0.458;   // 4×6: 5.5-in height
+
+// Board lengths (span + overhangs)
+const L1_LEN  = 12;      // 9 ft + 1.5 ft overhang each end
+const L2_LEN  =  8;      // 5 ft + 1.5 ft overhang each end
+
+// Crescent arc radii
+const L1_ARC  = 0.40;
+const L2_ARC  = 0.30;
+
+// L3 slats — 2×2 nominal (actual 1.5″ × 1.5″), run in X like L1
+const L3_W   = 0.125;   // 1.5 in (Z depth)
+const L3_H   = 0.125;   // 1.5 in (Y height)
+const L3_LEN = L1_LEN;  // same 12-ft span as L1 beams
+
+// Pergola colors
+const C_POST  = 0x6B4220;
+const C_L1    = 0xA07848;
+const C_L2    = 0x7A5528;
+const C_L3    = 0xC8A464;  // light pine/cedar
+const C_GND     = 0xD4D0BE;
+const C_FOOTING  = 0xC0B8A8;  // cast concrete grey
+const C_GRAVEL   = 0xA8A8A8;  // neutral grey gravel
+const FOOTING_R  = 7 / 12;    // 7-inch radius → 14-inch diameter footing
+
+// Rafter layout — mutable, driven by the Rafters input
+let nRafters = 6;
+let showL3   = false;   // L3 slat toggle
+let nL3      = 8;       // number of L3 slats
+const RAFTER_X0      = -4.5;
+const RAFTER_X1      =  4.5;
+const RAFTER_CZ      =  2.5;
+
+// Post corner XZ positions
+const CORNER_XZ = [[-4.5, 0], [4.5, 0], [-4.5, 5], [4.5, 5]];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Swing constants
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SW_W   = 5.0;   // swing width (ft, in X)
+const SW_D   = 1.5;   // swing seat depth (ft, in Z)
+const SW_ZC  = 2.5;   // swing center Z (middle of 5-ft pergola span)
+const SW_Z0  = SW_ZC - SW_D / 2;   // 1.75 ft  (front edge)
+const SW_Z1  = SW_ZC + SW_D / 2;   // 3.25 ft  (back edge)
+
+// Ergonomic heights (ft from ground, constant regardless of post height)
+const SEAT_Y     = 1.42;              // top of seat slats (~17 in)
+const ARM_Y      = SEAT_Y + 0.75;    // top of armrests  (~26 in total)
+const BACK_TOP_Y = SEAT_Y + 1.90;    // top of back slats (~40 in total)
+
+// X positions of the L2 rafters the chains hang from are now computed
+// dynamically inside buildSwing() based on nRafters.
+
+// Swing colors
+const C_SLAT  = 0xC4803A;   // warm cedar
+const C_FRAME = 0x1C1C1C;   // near-black frame
+const C_CHAIN = 0xA8A8A8;   // silver chain
+const C_HW    = 0x888888;   // hardware (darker silver)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Renderer & Scene
+// ─────────────────────────────────────────────────────────────────────────────
+
+const app = document.getElementById('app');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(app.clientWidth, app.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x000000, 0);
+app.insertBefore(renderer.domElement, app.firstChild);
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+  44, app.clientWidth / app.clientHeight, 0.1, 600
+);
+camera.position.set(20, 14, 24);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 5, 2.5);
+controls.enableDamping  = true;
+controls.dampingFactor  = 0.06;
+controls.minDistance    = 3;
+controls.maxDistance    = 80;
+controls.update();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Lighting
+// ─────────────────────────────────────────────────────────────────────────────
+
+scene.add(new THREE.AmbientLight(0xfff8f0, 0.50));
+
+const sun = new THREE.DirectionalLight(0xfff6e0, 1.05);
+sun.position.set(14, 24, 16);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near   =  0.5;
+sun.shadow.camera.far    = 70;
+sun.shadow.camera.left   = -16;
+sun.shadow.camera.right  =  16;
+sun.shadow.camera.top    =  30;
+sun.shadow.camera.bottom =  -5;
+sun.shadow.bias          = -0.0008;
+scene.add(sun);
+
+const fill = new THREE.DirectionalLight(0xc8dcff, 0.28);
+fill.position.set(-10, 8, -8);
+scene.add(fill);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ground
+// ─────────────────────────────────────────────────────────────────────────────
+
+const groundMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(50, 50),
+  new THREE.MeshLambertMaterial({ color: C_GND })
+);
+groundMesh.rotation.x   = -Math.PI / 2;
+groundMesh.receiveShadow = true;
+scene.add(groundMesh);
+
+// ── Gravel pad: 2 ft past each footing's outer edge in every direction ───────
+// Post corners at x = ±4.5, z = 0 & 5; footing radius = FOOTING_R
+// X span: ±(4.5 + FOOTING_R + 2) → total width ≈ 14.17 ft
+// Z span: −(FOOTING_R+2) → 5+(FOOTING_R+2) → total depth ≈ 10.17 ft, centre at z=2.5
+const GRAVEL_W = 2 * (4.5 + FOOTING_R + 2);
+const GRAVEL_D = 5  + 2 * (FOOTING_R + 2);
+const gravelMesh = new THREE.Mesh(
+  new THREE.PlaneGeometry(GRAVEL_W, GRAVEL_D),
+  new THREE.MeshLambertMaterial({ color: C_GRAVEL })
+);
+gravelMesh.rotation.x   = -Math.PI / 2;
+gravelMesh.position.set(0, 0.006, SW_ZC);
+gravelMesh.receiveShadow = true;
+scene.add(gravelMesh);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Board profile shape  (XY plane: X = length, Y = height, concave arc corners)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function makeBoardShape(len, h, r) {
+  const L = len / 2;
+  const s = new THREE.Shape();
+  s.moveTo(-L + r, 0);
+  s.lineTo( L - r, 0);
+  s.absarc( L, 0, r, Math.PI, Math.PI / 2, true);   // bottom-right concave
+  s.lineTo( L, h);
+  s.lineTo(-L, h);
+  s.lineTo(-L, r);
+  s.absarc(-L, 0, r, Math.PI / 2, 0, true);          // bottom-left concave
+  s.closePath();
+  return s;
+}
+
+const EXTRUDE_OPTS = { steps: 1, bevelEnabled: false };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pergola builder
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildPergola(h, n) {
+  const group   = new THREE.Group();
+  const geoPool = [];
+
+  const matPost = new THREE.MeshLambertMaterial({ color: C_POST });
+  const matL1   = new THREE.MeshLambertMaterial({ color: C_L1   });
+  const matL2   = new THREE.MeshLambertMaterial({ color: C_L2   });
+
+  function mesh(geo, mat, x, y, z) {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    m.castShadow = m.receiveShadow = true;
+    group.add(m);
+  }
+
+  // ── Posts ────────────────────────────────────────────────────────────────
+  const postTop = h + L1_H / 2;
+  const postGeo = new THREE.BoxGeometry(POST_W, postTop, POST_W);
+  geoPool.push(postGeo);
+  CORNER_XZ.forEach(([px, pz]) => mesh(postGeo, matPost, px, postTop / 2, pz));
+
+  // ── Concrete footings (14-in dia, 2 in exposed above grade) ──────────────
+  const FOOTING_H   = 1.0;           // 1 ft total (mostly below grade)
+  const FOOTING_TOP = 2 / 12;        // 2 inches proud of ground
+  const footingGeo  = new THREE.CylinderGeometry(FOOTING_R, FOOTING_R, FOOTING_H, 48);
+  const matFooting  = new THREE.MeshLambertMaterial({ color: C_FOOTING });
+  geoPool.push(footingGeo);
+  CORNER_XZ.forEach(([px, pz]) => {
+    const m = new THREE.Mesh(footingGeo, matFooting);
+    m.position.set(px, FOOTING_TOP - FOOTING_H / 2, pz);
+    m.castShadow = m.receiveShadow = true;
+    group.add(m);
+  });
+
+  // ── L1 Beams ─────────────────────────────────────────────────────────────
+  const l1Geo = new THREE.ExtrudeGeometry(
+    makeBoardShape(L1_LEN, L1_H, L1_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
+  );
+  l1Geo.translate(0, -L1_H / 2, -L1_T / 2);
+  geoPool.push(l1Geo);
+
+  const d   = 0.25 + L1_T / 2;
+  const l1Zs = [-d, +d, 5 - d, 5 + d];
+  l1Zs.forEach(pz => mesh(l1Geo, matL1, 0, h, pz));
+
+  // ── L2 Rafters ───────────────────────────────────────────────────────────
+  const l2Bottom    = h + L1_H / 2;
+  const l2CY        = l2Bottom + L2_H / 2;
+  const rafterSpacing = (RAFTER_X1 - RAFTER_X0) / (n - 1);
+
+  const l2Geo = new THREE.ExtrudeGeometry(
+    makeBoardShape(L2_LEN, L2_H, L2_ARC), { ...EXTRUDE_OPTS, depth: L2_W }
+  );
+  l2Geo.translate(0, -L2_H / 2, -L2_W / 2);
+  l2Geo.rotateY(Math.PI / 2);
+  geoPool.push(l2Geo);
+
+  for (let i = 0; i < n; i++) {
+    mesh(l2Geo, matL2, RAFTER_X0 + i * rafterSpacing, l2CY, RAFTER_CZ);
+  }
+
+  // ── L3 Slats (2×2, runs in X, sits on top of L2 rafters) ─────────────────
+  const matL3 = new THREE.MeshLambertMaterial({ color: C_L3 });
+  if (showL3 && nL3 >= 1) {
+    const l3CY  = h + L1_H / 2 + L2_H + L3_H / 2;  // rests on top of L2
+    const z0    = RAFTER_CZ - L2_LEN / 2;            // front overhang tip
+    const l3Geo = new THREE.BoxGeometry(L3_LEN, L3_H, L3_W);
+    geoPool.push(l3Geo);
+    for (let i = 0; i < nL3; i++) {
+      const pz = nL3 > 1 ? z0 + (i / (nL3 - 1)) * L2_LEN : RAFTER_CZ;
+      mesh(l3Geo, matL3, 0, l3CY, pz);
+    }
+  }
+
+  group._geoPool = geoPool;
+  group._mats    = [matPost, matL1, matL2, matFooting, matL3];
+  return group;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Swing builder
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildSwing(h, n) {
+  const grp     = new THREE.Group();
+  const geoPool = [];
+
+  const matSlat  = new THREE.MeshLambertMaterial({ color: C_SLAT  });
+  const matFrame = new THREE.MeshLambertMaterial({ color: C_FRAME });
+  const matChain = new THREE.MeshLambertMaterial({ color: C_CHAIN });
+  const matHW    = new THREE.MeshLambertMaterial({ color: C_HW    });
+
+  // Tiny helper: create a BoxGeometry, add to pool, return a mesh
+  function bx(w, ht, d, mat, x, y, z, rx) {
+    const geo = new THREE.BoxGeometry(w, ht, d);
+    geoPool.push(geo);
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    if (rx) m.rotation.x = rx;
+    m.castShadow = m.receiveShadow = true;
+    grp.add(m);
+  }
+
+  const ST  = 0.055;  // slat thickness (Y)
+  const SLW = 0.080;  // slat face width (Z)
+  const FT  = 0.075;  // frame tube cross-section
+
+  // ── Seat slats (8 boards run in X, spaced front-to-back) ─────────────────
+  const seatGeo = new THREE.BoxGeometry(SW_W, ST, SLW);
+  geoPool.push(seatGeo);
+  for (let i = 0; i < 8; i++) {
+    const m = new THREE.Mesh(seatGeo, matSlat);
+    m.position.set(0, SEAT_Y - ST * 0.5, SW_Z0 + (i / 7) * SW_D);
+    m.castShadow = m.receiveShadow = true;
+    grp.add(m);
+  }
+
+  // ── Back slats (tightly packed with ½-inch gaps, slight lean) ───────────
+  const B_LEAN    = 0.10;      // radians (~5.7°) backward lean
+  const BST       = 0.155;     // back slat face height (≈1.85 in wide boards)
+  const B_GAP     = 0.5 / 12; // ½-inch gap between back slats
+  const BACK_SPAN = BACK_TOP_Y - SEAT_Y;
+  const backStart = BST * 0.5 + 0.08;        // first slat centre above seat
+  const backMax   = BACK_SPAN - BST * 0.5;   // last slat centre limit
+  const backStep  = BST + B_GAP;
+  const BACK_N    = Math.floor((backMax - backStart) / backStep) + 1;
+  const backGeo   = new THREE.BoxGeometry(SW_W, BST, SLW);
+  geoPool.push(backGeo);
+  for (let i = 0; i < BACK_N; i++) {
+    const relH = backStart + i * backStep;
+    const m = new THREE.Mesh(backGeo, matSlat);
+    m.position.set(
+      0,
+      SEAT_Y + relH * Math.cos(B_LEAN),
+      SW_Z1  + relH * Math.sin(B_LEAN)
+    );
+    m.rotation.x = B_LEAN;
+    m.castShadow = m.receiveShadow = true;
+    grp.add(m);
+  }
+
+  // ── Front / back under-seat rails (run in X) ─────────────────────────────
+  bx(SW_W, FT, FT, matFrame, 0, SEAT_Y - ST - FT * 0.5, SW_Z0 + FT * 0.5);
+  bx(SW_W, FT, FT, matFrame, 0, SEAT_Y - ST - FT * 0.5, SW_Z1 - FT * 0.5);
+
+  // ── Left & right side frames ──────────────────────────────────────────────
+  [-SW_W / 2, SW_W / 2].forEach(xEdge => {
+    const xC = xEdge < 0 ? xEdge + FT * 0.5 : xEdge - FT * 0.5;
+
+    // Front arm post  (seat level → armrest top)
+    const frontH = ARM_Y - SEAT_Y + ST;
+    bx(FT, frontH, FT, matFrame,
+       xC, SEAT_Y - ST + frontH * 0.5, SW_Z0 + FT * 0.5);
+
+    // Rear back post — leans back at the same angle as the back slats
+    const backH  = BACK_TOP_Y - SEAT_Y + ST;
+    bx(FT, backH, FT, matFrame,
+       xC,
+       (SEAT_Y - ST) + backH * 0.5 * Math.cos(B_LEAN),
+       SW_Z1 + backH * 0.5 * Math.sin(B_LEAN),
+       B_LEAN);
+
+    // Under-seat side rail  (front to back)
+    bx(FT, FT, SW_D - FT, matFrame, xC, SEAT_Y - ST - FT * 0.5, SW_ZC);
+
+    // Armrest cap (cedar, wider than the frame post)
+    bx(0.19, ST * 0.9, SW_D + 0.22, matSlat,
+       xEdge, ARM_Y + ST * 0.45, SW_ZC - 0.01);
+  });
+
+  // ── Center cup-holder console ─────────────────────────────────────────────
+  bx(0.58, 0.042, 0.31, matFrame, 0, ARM_Y - 0.021, SW_ZC + 0.01);
+
+  // Cup rings (torus, lay flat on console surface)
+  const cupGeo = new THREE.TorusGeometry(0.072, 0.016, 6, 14);
+  geoPool.push(cupGeo);
+  [-0.14, 0.14].forEach(cx => {
+    const m = new THREE.Mesh(cupGeo, matFrame);
+    m.position.set(cx, ARM_Y + 0.006, SW_ZC + 0.01);
+    m.rotation.x = Math.PI / 2;
+    grp.add(m);
+  });
+
+  // ── Chains ────────────────────────────────────────────────────────────────
+  // Find chain-anchor rafters: start at the rafter nearest each swing end
+  // (±SW_W/2 = ±2.5 ft), then expand outward until the two anchors are
+  // at least 5 ft apart so the V-chains provide proper lateral stability.
+  const chainTopY = h + L1_H / 2;           // bottom of L2 rafter
+  const chainBotY = ARM_Y + 0.08;            // chain hooks on swing frame
+
+  const rafterSp  = (RAFTER_X1 - RAFTER_X0) / (n - 1);
+  const rafterPos = Array.from({ length: n }, (_, i) => RAFTER_X0 + i * rafterSp);
+  let li = Math.max(0, Math.min(n - 1, Math.round((-SW_W / 2 - RAFTER_X0) / rafterSp)));
+  let ri = Math.max(0, Math.min(n - 1, Math.round(( SW_W / 2 - RAFTER_X0) / rafterSp)));
+  while (rafterPos[ri] - rafterPos[li] < 5) {
+    if      (li > 0)     li--;
+    else if (ri < n - 1) ri++;
+    else break;
+  }
+  const CHAIN_X_L = rafterPos[li];
+  const CHAIN_X_R = rafterPos[ri];
+
+  const chainDefs = [
+    // Left side V (both from left rafter at z=SW_ZC)
+    { from: new THREE.Vector3(CHAIN_X_L, chainTopY, SW_ZC),
+      to:   new THREE.Vector3(-SW_W / 2,  chainBotY, SW_Z0) },
+    { from: new THREE.Vector3(CHAIN_X_L, chainTopY, SW_ZC),
+      to:   new THREE.Vector3(-SW_W / 2,  chainBotY, SW_Z1) },
+    // Right side V
+    { from: new THREE.Vector3(CHAIN_X_R, chainTopY, SW_ZC),
+      to:   new THREE.Vector3( SW_W / 2,  chainBotY, SW_Z0) },
+    { from: new THREE.Vector3(CHAIN_X_R, chainTopY, SW_ZC),
+      to:   new THREE.Vector3( SW_W / 2,  chainBotY, SW_Z1) },
+  ];
+
+  const LINK_PITCH = 0.065;   // ft per link
+
+  // Pre-count all links so we can allocate the InstancedMesh exactly
+  let totalLinks = 0;
+  const nPerChain = chainDefs.map(({ from, to }) => {
+    const n = Math.max(3, Math.round(from.distanceTo(to) / LINK_PITCH));
+    totalLinks += n;
+    return n;
+  });
+
+  const linkGeo = new THREE.TorusGeometry(0.021, 0.009, 4, 8);
+  geoPool.push(linkGeo);
+  const iMesh = new THREE.InstancedMesh(linkGeo, matChain, totalLinks);
+  iMesh.castShadow = true;
+  grp.add(iMesh);
+
+  const zAxis  = new THREE.Vector3(0, 0, 1);
+  const dummy  = new THREE.Object3D();
+  let   instIdx = 0;
+
+  chainDefs.forEach(({ from, to }, ci) => {
+    const n   = nPerChain[ci];
+    const dir = to.clone().sub(from).normalize();
+
+    // Two perpendicular planes that both contain the chain direction.
+    // Alternating the ring normal between them gives the classic chain look.
+    const ref  = Math.abs(dir.x) < 0.9
+      ? new THREE.Vector3(1, 0, 0)
+      : new THREE.Vector3(0, 0, 1);
+    const p1 = new THREE.Vector3().crossVectors(dir, ref).normalize();
+    const p2 = new THREE.Vector3().crossVectors(dir, p1).normalize();
+    const q0 = new THREE.Quaternion().setFromUnitVectors(zAxis, p1);
+    const q1 = new THREE.Quaternion().setFromUnitVectors(zAxis, p2);
+
+    for (let i = 0; i < n; i++) {
+      dummy.position.lerpVectors(from, to, n > 1 ? i / (n - 1) : 0);
+      dummy.quaternion.copy(i % 2 === 0 ? q0 : q1);
+      dummy.scale.set(1, 1, 1);
+      dummy.updateMatrix();
+      iMesh.setMatrixAt(instIdx++, dummy.matrix);
+    }
+  });
+  iMesh.instanceMatrix.needsUpdate = true;
+
+  // ── Rafter eye-bolts (visible rings where chain meets rafter bottom) ───────
+  const eyeGeo = new THREE.TorusGeometry(0.030, 0.012, 4, 10);
+  geoPool.push(eyeGeo);
+  [CHAIN_X_L, CHAIN_X_R].forEach(ex => {
+    const m = new THREE.Mesh(eyeGeo, matHW);
+    // Lay the ring flat against the rafter's bottom face
+    m.position.set(ex, chainTopY - 0.005, SW_ZC);
+    m.rotation.x = Math.PI / 2;
+    grp.add(m);
+  });
+
+  // ── Swing-frame chain hooks (small rings at each bottom attachment) ────────
+  const hookGeo = new THREE.TorusGeometry(0.020, 0.008, 4, 8);
+  geoPool.push(hookGeo);
+  [[-SW_W / 2, SW_Z0], [-SW_W / 2, SW_Z1],
+   [ SW_W / 2, SW_Z0], [ SW_W / 2, SW_Z1]].forEach(([hx, hz]) => {
+    const m = new THREE.Mesh(hookGeo, matHW);
+    m.position.set(hx, chainBotY + 0.005, hz);
+    m.rotation.x = Math.PI / 2;
+    grp.add(m);
+  });
+
+  grp._geoPool = geoPool;
+  grp._mats    = [matSlat, matFrame, matChain, matHW];
+  return grp;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rebuild / clear
+// ─────────────────────────────────────────────────────────────────────────────
+
+let pergolaGroup = null;
+let swingGroup   = null;
+
+function clearAll() {
+  [pergolaGroup, swingGroup].forEach(g => {
+    if (!g) return;
+    scene.remove(g);
+    g._geoPool.forEach(geo => geo.dispose());
+    g._mats.forEach(mat => mat.dispose());
+  });
+  pergolaGroup = null;
+  swingGroup   = null;
+}
+
+function rebuild(h, n) {
+  clearAll();
+  pergolaGroup = buildPergola(h, n);
+  swingGroup   = buildSwing(h, n);
+  scene.add(pergolaGroup);
+  scene.add(swingGroup);
+  controls.target.set(0, h * 0.42 + 1.0, 2.5);
+  controls.update();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slider
+// ─────────────────────────────────────────────────────────────────────────────
+
+let curH = 10;
+rebuild(curH, nRafters);
+
+const slider        = document.getElementById('slider');
+const hval          = document.getElementById('hval');
+const legendH       = document.getElementById('legend-h');
+const nrafInput     = document.getElementById('nraf');
+const legendSpacing = document.getElementById('legend-spacing');
+
+function syncUI() {
+  hval.textContent    = curH.toFixed(1) + ' ft';
+  legendH.textContent = curH.toFixed(1) + ' ft';
+  const sp = (RAFTER_X1 - RAFTER_X0) / (nRafters - 1) * 12;
+  legendSpacing.textContent = sp.toFixed(1) + ' in o.c.';
+}
+
+syncUI();
+
+slider.addEventListener('input', () => {
+  curH = parseFloat(slider.value);
+  syncUI();
+  rebuild(curH, nRafters);
+});
+
+nrafInput.addEventListener('input', () => {
+  const v = parseInt(nrafInput.value, 10);
+  if (!isFinite(v) || v < 2) return;
+  nRafters = Math.min(Math.max(v, 2), 20);
+  syncUI();
+  rebuild(curH, nRafters);
+});
+
+const l3Toggle    = document.getElementById('l3toggle');
+const nl3Input    = document.getElementById('nl3');
+const l3LegendRow = document.getElementById('l3-legend-row');
+
+l3Toggle.addEventListener('change', () => {
+  showL3 = l3Toggle.checked;
+  nl3Input.disabled     = !showL3;
+  l3LegendRow.style.display = showL3 ? '' : 'none';
+  rebuild(curH, nRafters);
+});
+
+nl3Input.addEventListener('input', () => {
+  const v = parseInt(nl3Input.value, 10);
+  if (!isFinite(v) || v < 1) return;
+  nL3 = Math.min(Math.max(v, 1), 40);
+  rebuild(curH, nRafters);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Resize
+// ─────────────────────────────────────────────────────────────────────────────
+
+window.addEventListener('resize', () => {
+  const w = app.clientWidth, h = app.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render loop
+// ─────────────────────────────────────────────────────────────────────────────
+
+(function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+})();
+
+})();
+</script>
+</body>
+</html>

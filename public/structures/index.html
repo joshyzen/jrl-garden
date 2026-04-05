@@ -540,10 +540,11 @@ function buildSwing(h, n) {
   const rafterSp  = (RAFTER_X1 - RAFTER_X0) / (n - 1);
   const rafterPos = Array.from({ length: n }, (_, i) => RAFTER_X0 + i * rafterSp);
   let li = Math.max(0, Math.min(n - 1, Math.round((-SW_W / 2 - RAFTER_X0) / rafterSp)));
-  let ri = Math.max(0, Math.min(n - 1, Math.round(( SW_W / 2 - RAFTER_X0) / rafterSp)));
+  let ri = (n - 1) - li;  // mirror by index for guaranteed symmetry
   while (rafterPos[ri] - rafterPos[li] < 5) {
-    if      (li > 0)     li--;
-    else if (ri < n - 1) ri++;
+    if      (li > 0 && ri < n - 1) { li--; ri++; }
+    else if (li > 0)                  li--;
+    else if (ri < n - 1)              ri++;
     else break;
   }
   const CHAIN_X_L = rafterPos[li];

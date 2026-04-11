@@ -82,18 +82,42 @@
     .meas-label { color: #666; }
     .meas-val   { font-weight: 700; color: #2a2a2a; white-space: nowrap; }
 
-    /* ── Slider panel ──────────────────────────────────────────── */
-    #controls {
-      position: absolute; bottom: 24px; left: 50%;
+    /* ── Controls shell (desktop bar + mobile bottom sheet) ───── */
+    #controls-shell {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
       transform: translateX(-50%);
+      z-index: 10;
+      user-select: none;
+    }
+    #controls-backdrop {
+      display: none;
+    }
+    #controls-fab {
+      display: none;
+    }
+    .controls-sheet-head {
+      display: none;
+    }
+    #controls-sheet {
+      display: contents;
+    }
+
+    #controls {
+      position: relative;
       background: rgba(255,255,255,0.90);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(0,0,0,0.08);
       border-radius: 10px;
       padding: 11px 24px;
-      display: flex; align-items: center; gap: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
       box-shadow: 0 3px 14px rgba(0,0,0,0.13);
-      user-select: none; z-index: 10;
+    }
+    .ctrl-block {
+      display: contents;
     }
     #controls label { font-size: 13px; color: #555; white-space: nowrap; }
     #slider { width: 180px; cursor: pointer; accent-color: #7A5528; }
@@ -117,35 +141,243 @@
       transition: background 0.12s;
     }
     #profile-btn:hover { background: rgba(0,0,0,0.05); }
+    #profile-wrap {
+      position: relative;
+    }
     #profile-popup {
       display: none;
-      position: absolute; bottom: calc(100% + 10px); left: 50%;
+      position: absolute; bottom: calc(100% + 8px); left: 50%;
       transform: translateX(-50%);
       background: rgba(255,255,255,0.97);
       backdrop-filter: blur(8px);
-      border: 1px solid rgba(0,0,0,0.10);
-      border-radius: 10px;
-      padding: 10px 12px;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 8px;
+      padding: 4px 0;
       box-shadow: 0 4px 18px rgba(0,0,0,0.15);
-      gap: 10px; flex-direction: row;
-      z-index: 20;
+      flex-direction: column;
+      min-width: 120px;
+      z-index: 25;
     }
     #profile-popup.open { display: flex; }
     .profile-opt {
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      background: none; border: 2px solid transparent;
-      border-radius: 7px; padding: 7px 10px; cursor: pointer;
-      transition: border-color 0.12s, background 0.12s;
+      background: none; border: none;
+      padding: 8px 16px; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: #2a2a2a;
+      text-align: left; white-space: nowrap;
+      transition: background 0.1s;
     }
-    .profile-opt:hover { background: rgba(0,0,0,0.04); }
-    .profile-opt.active { border-color: #7A5528; }
-    .profile-opt span { font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; }
+    .profile-opt:hover { background: rgba(0,0,0,0.05); }
+    .profile-opt.active { color: #7A5528; }
 
     /* ── Hint ──────────────────────────────────────────────────── */
     #hint {
       position: absolute; bottom: 24px; right: 18px;
       font-size: 11px; color: #aaa;
       z-index: 10; pointer-events: none;
+    }
+
+    /* ── Mobile: FAB + bottom sheet ───────────────────────────── */
+    @media (max-width: 880px) {
+      #controls-shell {
+        position: static;
+        transform: none;
+        pointer-events: none;
+      }
+
+      #controls-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.38);
+        z-index: 40;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.22s ease, visibility 0.22s ease;
+      }
+      #controls-shell.open #controls-backdrop {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+
+      #controls-fab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        left: 50%;
+        bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%);
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+        cursor: pointer;
+        z-index: 50;
+        color: #7A5528;
+        pointer-events: auto;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      #controls-fab:active {
+        transform: translateX(-50%) scale(0.96);
+      }
+      #controls-fab svg {
+        width: 26px;
+        height: 26px;
+      }
+      #controls-shell.open #controls-fab {
+        display: none;
+      }
+
+      #controls-sheet {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 45;
+        max-height: min(78vh, 100% - 48px);
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        border-radius: 16px 16px 0 0;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: none;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.14);
+        transform: translateY(105%);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        pointer-events: none;
+      }
+      #controls-shell.open #controls-sheet {
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .controls-sheet-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      }
+      .controls-sheet-head span {
+        font-size: 14px;
+        font-weight: 700;
+        color: #2a2a2a;
+        letter-spacing: 0.02em;
+      }
+      #controls-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        margin: -8px -6px -8px 0;
+        border: none;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.05);
+        color: #444;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      #controls-close:active {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      #controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px 18px 20px;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .ctrl-block {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+      }
+      .ctrl-block.ctrl-l3 {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        column-gap: 10px;
+        row-gap: 8px;
+      }
+      .ctrl-block.ctrl-l3 label {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .ctrl-block.ctrl-l0 {
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+      }
+      .ctrl-block.ctrl-height {
+        padding-top: 14px;
+        margin-top: 6px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .ctrl-sep {
+        display: none;
+      }
+      #slider {
+        width: 100%;
+      }
+      #hval {
+        align-self: flex-end;
+      }
+      #nraf, #nl3 {
+        width: 100%;
+        max-width: none;
+        padding: 10px 12px;
+        font-size: 16px;
+      }
+      #nl3 {
+        flex: 1 1 120px;
+        max-width: 160px;
+        margin-left: auto;
+      }
+      #profile-wrap {
+        width: 100%;
+      }
+      #profile-btn {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 15px;
+      }
+      /* In-flow menu: avoids clip from #controls overflow and tall containing block */
+      #profile-popup {
+        position: static;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        transform: none;
+        min-width: unset;
+        width: 100%;
+        margin-top: 8px;
+        z-index: auto;
+      }
+
+      #hint {
+        bottom: max(88px, calc(16px + env(safe-area-inset-bottom, 0px) + 52px + 12px));
+        right: 12px;
+        max-width: 42vw;
+        text-align: right;
+        line-height: 1.35;
+      }
     }
   </style>
 </head>
@@ -184,44 +416,53 @@
     </div>
   </div>
 
-  <div id="controls">
-    <label for="slider">Post Height</label>
-    <input type="range" id="slider" min="7" max="14" step="0.5" value="9">
-    <span id="hval">9.0 ft</span>
-    <span class="ctrl-sep"></span>
-    <label for="nraf">Rafters</label>
-    <input type="number" id="nraf" min="2" max="20" value="7">
-    <span class="ctrl-sep"></span>
-    <input type="checkbox" id="l3toggle">
-    <label for="l3toggle">L3 Slats</label>
-    <input type="number" id="nl3" min="1" max="40" value="8" disabled>
-    <span class="ctrl-sep"></span>
-    <input type="checkbox" id="l0toggle" checked>
-    <label for="l0toggle">L0 Beams</label>
-    <span class="ctrl-sep"></span>
-    <div id="profile-wrap">
-      <button id="profile-btn">Profile ▲</button>
-      <div id="profile-popup">
-        <button class="profile-opt active" data-p="1">
-          <svg width="90" height="30" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 3 L87 3 L87 21 A6 6 0 0 0 81 27 L9 27 A6 6 0 0 0 3 21 Z" stroke="#555" stroke-width="1.5"/>
-          </svg>
-          <span>Profile 1</span>
-        </button>
-        <button class="profile-opt" data-p="2">
-          <svg width="90" height="30" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 3 L87 3 A24 24 0 0 0 63 27 L27 27 A24 24 0 0 0 3 3 Z" stroke="#555" stroke-width="1.5"/>
-          </svg>
-          <span>Profile 2</span>
-        </button>
-        <button class="profile-opt" data-p="3">
-          <svg width="90" height="30" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 3 L87 3 L87 21 L81 27 L9 27 L3 21 Z" stroke="#555" stroke-width="1.5"/>
-          </svg>
-          <span>Profile 3</span>
-        </button>
+  <div id="controls-shell">
+    <div id="controls-backdrop" aria-hidden="true"></div>
+    <div id="controls-sheet">
+      <div class="controls-sheet-head">
+        <span>Pergola options</span>
+        <button type="button" id="controls-close" aria-label="Close settings">×</button>
+      </div>
+      <div id="controls">
+        <div class="ctrl-block">
+          <div id="profile-wrap">
+            <button type="button" id="profile-btn">Rafter Profile ▲</button>
+            <div id="profile-popup">
+              <button type="button" class="profile-opt active" data-p="1">Rafter Profile 1</button>
+              <button type="button" class="profile-opt" data-p="3">Rafter Profile 2</button>
+            </div>
+          </div>
+        </div>
+        <span class="ctrl-sep"></span>
+        <div class="ctrl-block">
+          <label for="nraf">Rafter Count</label>
+          <input type="number" id="nraf" min="2" max="20" value="7">
+        </div>
+        <span class="ctrl-sep"></span>
+        <div class="ctrl-block ctrl-l3">
+          <input type="checkbox" id="l3toggle">
+          <label for="l3toggle">Show L3 Slats</label>
+          <input type="number" id="nl3" min="1" max="40" value="8" disabled>
+        </div>
+        <span class="ctrl-sep"></span>
+        <div class="ctrl-block ctrl-l0">
+          <input type="checkbox" id="l0toggle" checked>
+          <label for="l0toggle">Show L0 Beams</label>
+        </div>
+        <span class="ctrl-sep"></span>
+        <div class="ctrl-block ctrl-height">
+          <label for="slider">Post Height</label>
+          <input type="range" id="slider" min="7" max="14" step="0.5" value="9">
+          <span id="hval">9.0 ft</span>
+        </div>
       </div>
     </div>
+    <button type="button" id="controls-fab" aria-label="Open pergola settings" title="Settings">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
   </div>
 
   <span id="hint">drag · scroll to zoom</span>
@@ -410,22 +651,8 @@ function makeBoardShape(len, h, r) {
   return s;
 }
 
-// Profile 2 — large concave quarter-circle at both ends (radius = board height)
-function makeBoardShapeP2(len, h) {
-  const L = len / 2;
-  const r = h;
-  const s = new THREE.Shape();
-  s.moveTo(-L + r, 0);
-  s.lineTo( L - r, 0);
-  s.absarc( L, 0, r, Math.PI, Math.PI / 2, true);   // bottom-right large concave
-  s.lineTo(-L, h);
-  s.absarc(-L, 0, r, Math.PI / 2, 0, true);          // bottom-left large concave
-  s.closePath();
-  return s;
-}
-
-// Profile 3 — 45° diagonal chamfer at both bottom corners
-function makeBoardShapeP3(len, h, c) {
+// Profile 2 — 45° diagonal chamfer at both bottom corners
+function makeBoardShapeP2(len, h, c) {
   const L = len / 2;
   const s = new THREE.Shape();
   s.moveTo(-L + c, 0);
@@ -450,8 +677,7 @@ function buildPergola(h, n, profile) {
   const geoPool = [];
 
   function boardShape(len, bh, r) {
-    if (profile === 2) return makeBoardShapeP2(len, bh);
-    if (profile === 3) return makeBoardShapeP3(len, bh, r);
+    if (profile === 3) return makeBoardShapeP2(len, bh, r);
     return makeBoardShape(len, bh, r);
   }
 
@@ -866,7 +1092,7 @@ const profilePopup = document.getElementById('profile-popup');
 profileBtn.addEventListener('click', e => {
   e.stopPropagation();
   const open = profilePopup.classList.toggle('open');
-  profileBtn.textContent = open ? 'Profile ▼' : 'Profile ▲';
+  profileBtn.textContent = open ? 'Rafter Profile ▼' : 'Rafter Profile ▲';
 });
 
 document.querySelectorAll('.profile-opt').forEach(btn => {
@@ -875,7 +1101,7 @@ document.querySelectorAll('.profile-opt').forEach(btn => {
     document.querySelectorAll('.profile-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     profilePopup.classList.remove('open');
-    profileBtn.textContent = 'Profile ▲';
+    profileBtn.textContent = 'Rafter Profile ▲';
     rebuild(curH, nRafters);
   });
 });
@@ -883,7 +1109,43 @@ document.querySelectorAll('.profile-opt').forEach(btn => {
 document.addEventListener('click', e => {
   if (!e.target.closest('#profile-wrap')) {
     profilePopup.classList.remove('open');
-    profileBtn.textContent = 'Profile ▲';
+    profileBtn.textContent = 'Rafter Profile ▲';
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile controls bottom sheet
+// ─────────────────────────────────────────────────────────────────────────────
+
+const controlsShell    = document.getElementById('controls-shell');
+const controlsFab      = document.getElementById('controls-fab');
+const controlsClose    = document.getElementById('controls-close');
+const controlsBackdrop = document.getElementById('controls-backdrop');
+const mqControlsMobile = window.matchMedia('(max-width: 880px)');
+
+function setControlsSheetOpen(open) {
+  if (!mqControlsMobile.matches) return;
+  controlsShell.classList.toggle('open', open);
+  controlsBackdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+}
+
+function closeControlsSheet() {
+  setControlsSheetOpen(false);
+}
+
+controlsFab.addEventListener('click', () => setControlsSheetOpen(true));
+controlsClose.addEventListener('click', closeControlsSheet);
+controlsBackdrop.addEventListener('click', closeControlsSheet);
+
+mqControlsMobile.addEventListener('change', e => {
+  if (!e.matches) controlsShell.classList.remove('open');
+});
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && controlsShell.classList.contains('open')) {
+    closeControlsSheet();
+    profilePopup.classList.remove('open');
+    profileBtn.textContent = 'Rafter Profile ▲';
   }
 });
 
@@ -893,6 +1155,11 @@ document.addEventListener('click', e => {
 
 const legendEl     = document.getElementById('legend');
 const legendToggle = document.getElementById('legend-toggle');
+if (window.matchMedia('(max-width: 880px)').matches) {
+  legendEl.classList.add('collapsed');
+  legendToggle.textContent = '+';
+  legendToggle.title = 'Expand';
+}
 legendToggle.addEventListener('click', () => {
   const collapsed = legendEl.classList.toggle('collapsed');
   legendToggle.textContent = collapsed ? '+' : '−';

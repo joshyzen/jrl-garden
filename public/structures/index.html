@@ -38,6 +38,28 @@
       font-size: 11px; font-weight: 700; letter-spacing: .06em;
       text-transform: uppercase; color: #888; margin-bottom: 7px;
     }
+    .legend-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 7px;
+    }
+    .legend-header h3 { margin-bottom: 0; }
+    #legend-toggle {
+      background: none; border: none; cursor: pointer;
+      color: #aaa; font-size: 16px; line-height: 1;
+      padding: 0 0 0 8px; flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    #legend-toggle:hover { color: #555; }
+    #legend-body {
+      overflow: hidden;
+      transition: opacity 0.2s;
+    }
+    #legend.collapsed #legend-body {
+      display: none;
+    }
+    #legend.collapsed {
+      min-width: 0;
+    }
     .leg-row { display: flex; align-items: center; gap: 9px; }
     .swatch {
       width: 13px; height: 13px; border-radius: 2px; flex-shrink: 0;
@@ -99,7 +121,11 @@
 <div id="app">
 
   <div id="legend">
-    <h3>Components</h3>
+    <div class="legend-header">
+      <h3>Components</h3>
+      <button id="legend-toggle" title="Minimize">−</button>
+    </div>
+    <div id="legend-body">
     <div class="leg-row"><span class="swatch" style="background:#6B4220"></span>Posts — 6×6 nominal</div>
     <div class="leg-row" id="l0-legend-row"><span class="swatch" style="background:#8B5E30"></span>L0 Cross-Beams — 2×8, Z-span</div>
     <div class="leg-row"><span class="swatch" style="background:#A07848"></span>L1 Beams — 2×8, X-span</div>
@@ -123,6 +149,7 @@
     <div class="leg-row meas-row"><span class="meas-label">L0 each end</span><span class="meas-val">15 in</span></div>
     <div class="leg-row meas-row"><span class="meas-label">L1 each end</span><span class="meas-val">15 in</span></div>
     <div class="leg-row meas-row"><span class="meas-label">L2 each end</span><span class="meas-val">18 in</span></div>
+    </div>
   </div>
 
   <div id="controls">
@@ -734,6 +761,18 @@ window.addEventListener('resize', () => {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Legend minimize toggle
+// ─────────────────────────────────────────────────────────────────────────────
+
+const legendEl     = document.getElementById('legend');
+const legendToggle = document.getElementById('legend-toggle');
+legendToggle.addEventListener('click', () => {
+  const collapsed = legendEl.classList.toggle('collapsed');
+  legendToggle.textContent = collapsed ? '+' : '−';
+  legendToggle.title       = collapsed ? 'Expand' : 'Minimize';
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

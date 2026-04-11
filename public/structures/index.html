@@ -109,6 +109,38 @@
     #nl3:disabled { opacity: 0.38; cursor: not-allowed; }
     #l3toggle { cursor: pointer; accent-color: #7A5528; width: 15px; height: 15px; flex-shrink: 0; }
 
+    /* ── Profile picker ────────────────────────────────────────── */
+    #profile-btn {
+      background: none; border: 1px solid rgba(0,0,0,0.18); border-radius: 5px;
+      padding: 3px 9px; font-size: 13px; font-weight: 700; color: #2a2a2a;
+      cursor: pointer; white-space: nowrap; line-height: 1.6;
+      transition: background 0.12s;
+    }
+    #profile-btn:hover { background: rgba(0,0,0,0.05); }
+    #profile-popup {
+      display: none;
+      position: absolute; bottom: calc(100% + 10px); left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+      gap: 10px; flex-direction: row;
+      z-index: 20;
+    }
+    #profile-popup.open { display: flex; }
+    .profile-opt {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      background: none; border: 2px solid transparent;
+      border-radius: 7px; padding: 7px 10px; cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .profile-opt:hover { background: rgba(0,0,0,0.04); }
+    .profile-opt.active { border-color: #7A5528; }
+    .profile-opt span { font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; }
+
     /* ── Hint ──────────────────────────────────────────────────── */
     #hint {
       position: absolute; bottom: 24px; right: 18px;
@@ -166,6 +198,30 @@
     <span class="ctrl-sep"></span>
     <input type="checkbox" id="l0toggle" checked>
     <label for="l0toggle">L0 Beams</label>
+    <span class="ctrl-sep"></span>
+    <div id="profile-wrap">
+      <button id="profile-btn">Profile ▲</button>
+      <div id="profile-popup">
+        <button class="profile-opt active" data-p="1">
+          <svg width="90" height="30" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3 L87 3 L87 21 A6 6 0 0 0 81 27 L9 27 A6 6 0 0 0 3 21 Z" stroke="#555" stroke-width="1.5"/>
+          </svg>
+          <span>Profile 1</span>
+        </button>
+        <button class="profile-opt" data-p="2">
+          <svg width="90" height="30" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3 L87 3 A24 24 0 0 0 63 27 L27 27 A24 24 0 0 0 3 3 Z" stroke="#555" stroke-width="1.5"/>
+          </svg>
+          <span>Profile 2</span>
+        </button>
+        <button class="profile-opt" data-p="3">
+          <svg width="90" height="30" viewBox="0 0 90 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3 L87 3 L87 21 L81 27 L9 27 L3 21 Z" stroke="#555" stroke-width="1.5"/>
+          </svg>
+          <span>Profile 3</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <span id="hint">drag · scroll to zoom</span>
@@ -224,6 +280,7 @@ let nRafters = 7;
 let showL0   = true;    // L0 cross-beam toggle
 let showL3   = false;   // L3 slat toggle
 let nL3      = 8;       // number of L3 slats
+let curProfile = 1;     // rafter end profile (1, 2, or 3)
 const RAFTER_X0      = -4.5;
 const RAFTER_X1      =  4.5;
 const RAFTER_CZ      =  2.5;
@@ -338,6 +395,7 @@ scene.add(gravelMesh);
 // Board profile shape  (XY plane: X = length, Y = height, concave arc corners)
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Profile 1 — small concave arcs at both bottom corners (original)
 function makeBoardShape(len, h, r) {
   const L = len / 2;
   const s = new THREE.Shape();
@@ -352,15 +410,50 @@ function makeBoardShape(len, h, r) {
   return s;
 }
 
+// Profile 2 — large concave quarter-circle at both ends (radius = board height)
+function makeBoardShapeP2(len, h) {
+  const L = len / 2;
+  const r = h;
+  const s = new THREE.Shape();
+  s.moveTo(-L + r, 0);
+  s.lineTo( L - r, 0);
+  s.absarc( L, 0, r, Math.PI, Math.PI / 2, true);   // bottom-right large concave
+  s.lineTo(-L, h);
+  s.absarc(-L, 0, r, Math.PI / 2, 0, true);          // bottom-left large concave
+  s.closePath();
+  return s;
+}
+
+// Profile 3 — 45° diagonal chamfer at both bottom corners
+function makeBoardShapeP3(len, h, c) {
+  const L = len / 2;
+  const s = new THREE.Shape();
+  s.moveTo(-L + c, 0);
+  s.lineTo( L - c, 0);
+  s.lineTo( L, c);           // bottom-right chamfer diagonal
+  s.lineTo( L, h);
+  s.lineTo(-L, h);
+  s.lineTo(-L, c);
+  s.lineTo(-L + c, 0);       // bottom-left chamfer diagonal
+  s.closePath();
+  return s;
+}
+
 const EXTRUDE_OPTS = { steps: 1, bevelEnabled: false };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pergola builder
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildPergola(h, n) {
+function buildPergola(h, n, profile) {
   const group   = new THREE.Group();
   const geoPool = [];
+
+  function boardShape(len, bh, r) {
+    if (profile === 2) return makeBoardShapeP2(len, bh);
+    if (profile === 3) return makeBoardShapeP3(len, bh, r);
+    return makeBoardShape(len, bh, r);
+  }
 
   const matPost = new THREE.MeshLambertMaterial({ color: C_POST });
   const matL0   = new THREE.MeshLambertMaterial({ color: C_L0   });
@@ -398,7 +491,7 @@ function buildPergola(h, n) {
     const d0    = 0.25 + L1_T / 2;
     const l0CY  = h - L1_H;
     const l0Geo = new THREE.ExtrudeGeometry(
-      makeBoardShape(L0_LEN, L1_H, L0_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
+      boardShape(L0_LEN, L1_H, L0_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
     );
     l0Geo.translate(0, -L1_H / 2, -L1_T / 2);
     l0Geo.rotateY(Math.PI / 2);
@@ -410,7 +503,7 @@ function buildPergola(h, n) {
 
   // ── L1 Beams ─────────────────────────────────────────────────────────────
   const l1Geo = new THREE.ExtrudeGeometry(
-    makeBoardShape(L1_LEN, L1_H, L1_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
+    boardShape(L1_LEN, L1_H, L1_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
   );
   l1Geo.translate(0, -L1_H / 2, -L1_T / 2);
   geoPool.push(l1Geo);
@@ -425,7 +518,7 @@ function buildPergola(h, n) {
   const rafterSpacing = (RAFTER_X1 - RAFTER_X0) / (n - 1);
 
   const l2Geo = new THREE.ExtrudeGeometry(
-    makeBoardShape(L2_LEN, L2_H, L2_ARC), { ...EXTRUDE_OPTS, depth: L2_W }
+    boardShape(L2_LEN, L2_H, L2_ARC), { ...EXTRUDE_OPTS, depth: L2_W }
   );
   l2Geo.translate(0, -L2_H / 2, -L2_W / 2);
   l2Geo.rotateY(Math.PI / 2);
@@ -681,7 +774,7 @@ function clearAll() {
 
 function rebuild(h, n) {
   clearAll();
-  pergolaGroup = buildPergola(h, n);
+  pergolaGroup = buildPergola(h, n, curProfile);
   swingGroup   = buildSwing(h, n);
   scene.add(pergolaGroup);
   scene.add(swingGroup);
@@ -761,6 +854,37 @@ window.addEventListener('resize', () => {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile picker
+// ─────────────────────────────────────────────────────────────────────────────
+
+const profileBtn   = document.getElementById('profile-btn');
+const profilePopup = document.getElementById('profile-popup');
+
+profileBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = profilePopup.classList.toggle('open');
+  profileBtn.textContent = open ? 'Profile ▼' : 'Profile ▲';
+});
+
+document.querySelectorAll('.profile-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    curProfile = parseInt(btn.dataset.p, 10);
+    document.querySelectorAll('.profile-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    profilePopup.classList.remove('open');
+    profileBtn.textContent = 'Profile ▲';
+    rebuild(curH, nRafters);
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#profile-wrap')) {
+    profilePopup.classList.remove('open');
+    profileBtn.textContent = 'Profile ▲';
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

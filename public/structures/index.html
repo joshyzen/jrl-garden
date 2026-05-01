@@ -133,18 +133,18 @@
     #nl3:disabled { opacity: 0.38; cursor: not-allowed; }
     #l3toggle { cursor: pointer; accent-color: #7A5528; width: 15px; height: 15px; flex-shrink: 0; }
 
-    /* ── Profile picker ────────────────────────────────────────── */
-    #profile-btn {
+    /* ── Profile & Footprint pickers ───────────────────────────── */
+    #profile-btn, #footprint-btn {
       background: none; border: 1px solid rgba(0,0,0,0.18); border-radius: 5px;
       padding: 3px 9px; font-size: 13px; font-weight: 700; color: #2a2a2a;
       cursor: pointer; white-space: nowrap; line-height: 1.6;
       transition: background 0.12s;
     }
-    #profile-btn:hover { background: rgba(0,0,0,0.05); }
-    #profile-wrap {
+    #profile-btn:hover, #footprint-btn:hover { background: rgba(0,0,0,0.05); }
+    #profile-wrap, #footprint-wrap {
       position: relative;
     }
-    #profile-popup {
+    #profile-popup, #footprint-popup {
       display: none;
       position: absolute; bottom: calc(100% + 8px); left: 50%;
       transform: translateX(-50%);
@@ -155,19 +155,19 @@
       padding: 4px 0;
       box-shadow: 0 4px 18px rgba(0,0,0,0.15);
       flex-direction: column;
-      min-width: 120px;
+      min-width: 148px;
       z-index: 25;
     }
-    #profile-popup.open { display: flex; }
-    .profile-opt {
+    #profile-popup.open, #footprint-popup.open { display: flex; }
+    .profile-opt, .footprint-opt {
       background: none; border: none;
       padding: 8px 16px; cursor: pointer;
       font-size: 13px; font-weight: 600; color: #2a2a2a;
       text-align: left; white-space: nowrap;
       transition: background 0.1s;
     }
-    .profile-opt:hover { background: rgba(0,0,0,0.05); }
-    .profile-opt.active { color: #7A5528; }
+    .profile-opt:hover, .footprint-opt:hover { background: rgba(0,0,0,0.05); }
+    .profile-opt.active, .footprint-opt.active { color: #7A5528; }
 
     /* ── Hint ──────────────────────────────────────────────────── */
     #hint {
@@ -350,16 +350,16 @@
         max-width: 160px;
         margin-left: auto;
       }
-      #profile-wrap {
+      #profile-wrap, #footprint-wrap {
         width: 100%;
       }
-      #profile-btn {
+      #profile-btn, #footprint-btn {
         width: 100%;
         padding: 10px 12px;
         font-size: 15px;
       }
-      /* In-flow menu: avoids clip from #controls overflow and tall containing block */
-      #profile-popup {
+      /* In-flow menus: avoids clip from #controls overflow */
+      #profile-popup, #footprint-popup {
         position: static;
         left: auto;
         right: auto;
@@ -401,13 +401,13 @@
     <div class="leg-row"><span class="swatch" style="background:linear-gradient(to right,#C4803A 50%,#1C1C1C 50%)"></span>Swing — Cedar &amp; Black</div>
     <hr class="leg-divider">
     <h3>Measurements</h3>
-    <div class="leg-row meas-row"><span class="meas-label">Footprint</span><span class="meas-val">9 × 5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Footprint</span><span class="meas-val" id="legend-footprint">9 × 5 ft</span></div>
     <div class="leg-row meas-row"><span class="meas-label">Height</span><span class="meas-val" id="legend-h">9.0 ft</span></div>
     <div class="leg-row meas-row"><span class="meas-label">Rafter spacing</span><span class="meas-val" id="legend-spacing">21.6 in o.c.</span></div>
-    <div class="leg-row meas-row"><span class="meas-label">L0 length</span><span class="meas-val">7.5 ft</span></div>
-    <div class="leg-row meas-row"><span class="meas-label">L1 length</span><span class="meas-val">11.5 ft</span></div>
-    <div class="leg-row meas-row"><span class="meas-label">L2 length</span><span class="meas-val">8 ft</span></div>
-    <div class="leg-row meas-row"><span class="meas-label">Swing length</span><span class="meas-val">5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L0 length</span><span class="meas-val" id="legend-l0">7.5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L1 length</span><span class="meas-val" id="legend-l1">11.5 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">L2 length</span><span class="meas-val" id="legend-l2">8 ft</span></div>
+    <div class="leg-row meas-row"><span class="meas-label">Swing width</span><span class="meas-val" id="legend-swing">5 ft</span></div>
     <hr class="leg-divider">
     <h3>Overhangs</h3>
     <div class="leg-row meas-row"><span class="meas-label">L0 each end</span><span class="meas-val">15 in</span></div>
@@ -424,6 +424,18 @@
         <button type="button" id="controls-close" aria-label="Close settings">×</button>
       </div>
       <div id="controls">
+        <div class="ctrl-block">
+          <div id="footprint-wrap">
+            <button type="button" id="footprint-btn">Footprint ▲</button>
+            <div id="footprint-popup">
+              <button type="button" class="footprint-opt active" data-w="9" data-d="5" data-sw="5">9 × 5 ft · 5 ft swing</button>
+              <button type="button" class="footprint-opt" data-w="10" data-d="5" data-sw="6">10 × 5 ft · 6 ft swing</button>
+              <button type="button" class="footprint-opt" data-w="10" data-d="5.5" data-sw="6">10 × 5.5 ft · 6 ft swing</button>
+              <button type="button" class="footprint-opt" data-w="10" data-d="6" data-sw="6">10 × 6 ft · 6 ft swing</button>
+            </div>
+          </div>
+        </div>
+        <span class="ctrl-sep"></span>
         <div class="ctrl-block">
           <div id="profile-wrap">
             <button type="button" id="profile-btn">Rafter Profile ▲</button>
@@ -488,22 +500,19 @@ const L1_T    = 0.125;   // 2×8: 1.5-in thickness
 const L2_W    = 0.292;   // 4×6: 3.5-in width
 const L2_H    = 0.458;   // 4×6: 5.5-in height
 
-// Board lengths (span + overhangs)
-const L1_LEN  = 11.5;    // 9 ft + 1.25 ft overhang each end
-const L2_LEN  =  8;      // 5 ft + 1.5 ft overhang each end
-
 // Crescent arc radii
 const L1_ARC  = 0.40;
 const L2_ARC  = 0.30;
-
-// L0 cross-beams — 2×8, Z-span, underneath L1 (same dimensions as L1)
-const L0_LEN  = 7.5;     // 5 ft + 1.25 ft overhang each end
 const L0_ARC  = 0.40;
 
 // L3 slats — 2×2 nominal (actual 1.5″ × 1.5″), run in X like L1
 const L3_W   = 0.125;   // 1.5 in (Z depth)
 const L3_H   = 0.125;   // 1.5 in (Y height)
-const L3_LEN = L1_LEN;  // same 12-ft span as L1 beams
+
+// Overhangs — constant across all presets
+const L1_OH  = 1.25;    // 15 in each end (X-direction beams & slats)
+const L0_OH  = 1.25;    // 15 in each end (Z-direction cross-beams)
+const L2_OH  = 1.50;    // 18 in each end (Z-direction rafters)
 
 // Pergola colors
 const C_POST  = 0x6B4220;
@@ -518,34 +527,22 @@ const FOOTING_R  = 7 / 12;    // 7-inch radius → 14-inch diameter footing
 
 // Rafter layout — mutable, driven by the Rafters input
 let nRafters = 7;
-let showL0   = true;    // L0 cross-beam toggle
-let showL3   = false;   // L3 slat toggle
-let nL3      = 8;       // number of L3 slats
-let curProfile = 1;     // rafter end profile (1, 2, or 3)
-const RAFTER_X0      = -4.5;
-const RAFTER_X1      =  4.5;
-const RAFTER_CZ      =  2.5;
-
-// Post corner XZ positions
-const CORNER_XZ = [[-4.5, 0], [4.5, 0], [-4.5, 5], [4.5, 5]];
+let showL0   = true;
+let showL3   = false;
+let nL3      = 8;
+let curProfile = 1;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Swing constants
+// Footprint — drives all geometry; updated by the footprint picker
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SW_W   = 5.0;   // swing width (ft, in X)
-const SW_D   = 1.5;   // swing seat depth (ft, in Z)
-const SW_ZC  = 2.5;   // swing center Z (middle of 5-ft pergola span)
-const SW_Z0  = SW_ZC - SW_D / 2;   // 1.75 ft  (front edge)
-const SW_Z1  = SW_ZC + SW_D / 2;   // 3.25 ft  (back edge)
+let footprint = { width: 9, depth: 5, swingW: 5 };
 
-// Ergonomic heights (ft from ground, constant regardless of post height)
-const SEAT_Y     = 1.50;              // top of seat slats (~18 in)
-const ARM_Y      = SEAT_Y + 0.75;    // top of armrests  (~26 in total)
-const BACK_TOP_Y = SEAT_Y + 1.90;    // top of back slats (~40 in total)
-
-// X positions of the L2 rafters the chains hang from are now computed
-// dynamically inside buildSwing() based on nRafters.
+// Ergonomic swing heights (constant regardless of post height or footprint)
+const SW_SEAT_D  = 1.5;    // seat depth (ft, in Z)
+const SEAT_Y     = 1.50;
+const ARM_Y      = SEAT_Y + 0.75;
+const BACK_TOP_Y = SEAT_Y + 1.90;
 
 // Swing colors
 const C_SLAT  = 0xC4803A;   // warm cedar
@@ -617,20 +614,7 @@ groundMesh.rotation.x   = -Math.PI / 2;
 groundMesh.receiveShadow = true;
 scene.add(groundMesh);
 
-// ── Gravel pad: 2 ft past each footing's outer edge in every direction ───────
-// Post corners at x = ±4.5, z = 0 & 5; footing radius = FOOTING_R
-// X span: ±(4.5 + FOOTING_R + 2) → total width ≈ 14.17 ft
-// Z span: −(FOOTING_R+2) → 5+(FOOTING_R+2) → total depth ≈ 10.17 ft, centre at z=2.5
-const GRAVEL_W = 2 * (4.5 + FOOTING_R + 2);
-const GRAVEL_D = 5  + 2 * (FOOTING_R + 2);
-const gravelMesh = new THREE.Mesh(
-  new THREE.PlaneGeometry(GRAVEL_W, GRAVEL_D),
-  new THREE.MeshLambertMaterial({ color: C_GRAVEL })
-);
-gravelMesh.rotation.x   = -Math.PI / 2;
-gravelMesh.position.set(0, 0.006, SW_ZC);
-gravelMesh.receiveShadow = true;
-scene.add(gravelMesh);
+// Gravel pad is rebuilt dynamically in rebuildGravel() whenever footprint changes.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Board profile shape  (XY plane: X = length, Y = height, concave arc corners)
@@ -673,6 +657,18 @@ const EXTRUDE_OPTS = { steps: 1, bevelEnabled: false };
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildPergola(h, n, profile) {
+  const W         = footprint.width;
+  const D         = footprint.depth;
+  const HALF_W    = W / 2;
+  const L1_LEN    = W + 2 * L1_OH;
+  const L0_LEN    = D + 2 * L0_OH;
+  const L2_LEN    = D + 2 * L2_OH;
+  const L3_LEN    = L1_LEN;
+  const RAFTER_X0 = -HALF_W;
+  const RAFTER_X1 =  HALF_W;
+  const RAFTER_CZ = D / 2;
+  const CORNER_XZ = [[-HALF_W, 0], [HALF_W, 0], [-HALF_W, D], [HALF_W, D]];
+
   const group   = new THREE.Group();
   const geoPool = [];
 
@@ -735,7 +731,7 @@ function buildPergola(h, n, profile) {
   geoPool.push(l1Geo);
 
   const d   = 0.25 + L1_T / 2;
-  const l1Zs = [-d, +d, 5 - d, 5 + d];
+  const l1Zs = [-d, +d, D - d, D + d];
   l1Zs.forEach(pz => mesh(l1Geo, matL1, 0, h, pz));
 
   // ── L2 Rafters ───────────────────────────────────────────────────────────
@@ -777,6 +773,15 @@ function buildPergola(h, n, profile) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildSwing(h, n) {
+  const W         = footprint.width;
+  const D         = footprint.depth;
+  const SW_W      = footprint.swingW;
+  const RAFTER_X0 = -W / 2;
+  const RAFTER_X1 =  W / 2;
+  const SW_ZC     = D / 2;
+  const SW_Z0     = SW_ZC - SW_SEAT_D / 2;
+  const SW_Z1     = SW_ZC + SW_SEAT_D / 2;
+
   const grp     = new THREE.Group();
   const geoPool = [];
 
@@ -805,7 +810,7 @@ function buildSwing(h, n) {
   geoPool.push(seatGeo);
   for (let i = 0; i < 8; i++) {
     const m = new THREE.Mesh(seatGeo, matSlat);
-    m.position.set(0, SEAT_Y - ST * 0.5, SW_Z0 + (i / 7) * SW_D);
+    m.position.set(0, SEAT_Y - ST * 0.5, SW_Z0 + (i / 7) * SW_SEAT_D);
     m.castShadow = m.receiveShadow = true;
     grp.add(m);
   }
@@ -856,10 +861,10 @@ function buildSwing(h, n) {
        B_LEAN);
 
     // Under-seat side rail  (front to back)
-    bx(FT, FT, SW_D - FT, matFrame, xC, SEAT_Y - ST - FT * 0.5, SW_ZC);
+    bx(FT, FT, SW_SEAT_D - FT, matFrame, xC, SEAT_Y - ST - FT * 0.5, SW_ZC);
 
     // Armrest cap (cedar, wider than the frame post)
-    bx(0.19, ST * 0.9, SW_D + 0.22, matSlat,
+    bx(0.19, ST * 0.9, SW_SEAT_D + 0.22, matSlat,
        xEdge, ARM_Y + ST * 0.45, SW_ZC - 0.01);
   });
 
@@ -887,7 +892,7 @@ function buildSwing(h, n) {
   const rafterPos = Array.from({ length: n }, (_, i) => RAFTER_X0 + i * rafterSp);
   let li = Math.max(0, Math.min(n - 1, Math.round((-SW_W / 2 - RAFTER_X0) / rafterSp)));
   let ri = (n - 1) - li;  // mirror by index for guaranteed symmetry
-  while (rafterPos[ri] - rafterPos[li] < 5) {
+  while (rafterPos[ri] - rafterPos[li] < SW_W) {
     if      (li > 0 && ri < n - 1) { li--; ri++; }
     else if (li > 0)                  li--;
     else if (ri < n - 1)              ri++;
@@ -986,6 +991,24 @@ function buildSwing(h, n) {
 
 let pergolaGroup = null;
 let swingGroup   = null;
+let gravelMesh   = null;
+const gravelMat  = new THREE.MeshLambertMaterial({ color: C_GRAVEL });
+
+function rebuildGravel() {
+  if (gravelMesh) {
+    scene.remove(gravelMesh);
+    gravelMesh.geometry.dispose();
+  }
+  const W = footprint.width;
+  const D = footprint.depth;
+  const GW = 2 * (W / 2 + FOOTING_R + 2);
+  const GD = D + 2 * (FOOTING_R + 2);
+  gravelMesh = new THREE.Mesh(new THREE.PlaneGeometry(GW, GD), gravelMat);
+  gravelMesh.rotation.x    = -Math.PI / 2;
+  gravelMesh.position.set(0, 0.006, D / 2);
+  gravelMesh.receiveShadow = true;
+  scene.add(gravelMesh);
+}
 
 function clearAll() {
   [pergolaGroup, swingGroup].forEach(g => {
@@ -1000,11 +1023,12 @@ function clearAll() {
 
 function rebuild(h, n) {
   clearAll();
+  rebuildGravel();
   pergolaGroup = buildPergola(h, n, curProfile);
   swingGroup   = buildSwing(h, n);
   scene.add(pergolaGroup);
   scene.add(swingGroup);
-  controls.target.set(0, h * 0.42 + 1.0, 2.5);
+  controls.target.set(0, h * 0.42 + 1.0, footprint.depth / 2);
   controls.update();
 }
 
@@ -1020,12 +1044,24 @@ const hval          = document.getElementById('hval');
 const legendH       = document.getElementById('legend-h');
 const nrafInput     = document.getElementById('nraf');
 const legendSpacing = document.getElementById('legend-spacing');
+const legendFP      = document.getElementById('legend-footprint');
+const legendL0      = document.getElementById('legend-l0');
+const legendL1      = document.getElementById('legend-l1');
+const legendL2      = document.getElementById('legend-l2');
+const legendSwing   = document.getElementById('legend-swing');
 
 function syncUI() {
+  const W = footprint.width;
+  const D = footprint.depth;
   hval.textContent    = curH.toFixed(1) + ' ft';
   legendH.textContent = curH.toFixed(1) + ' ft';
-  const sp = (RAFTER_X1 - RAFTER_X0) / (nRafters - 1) * 12;
+  const sp = W / (nRafters - 1) * 12;
   legendSpacing.textContent = sp.toFixed(1) + ' in o.c.';
+  legendFP.textContent    = W + ' × ' + D + ' ft';
+  legendL0.textContent    = (D + 2 * L0_OH).toFixed(1) + ' ft';
+  legendL1.textContent    = (W + 2 * L1_OH).toFixed(1) + ' ft';
+  legendL2.textContent    = (D + 2 * L2_OH).toFixed(1) + ' ft';
+  legendSwing.textContent = footprint.swingW + ' ft';
 }
 
 syncUI();
@@ -1083,6 +1119,42 @@ window.addEventListener('resize', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Footprint picker
+// ─────────────────────────────────────────────────────────────────────────────
+
+const footprintBtn   = document.getElementById('footprint-btn');
+const footprintPopup = document.getElementById('footprint-popup');
+
+footprintBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = footprintPopup.classList.toggle('open');
+  footprintBtn.textContent = open ? 'Footprint ▼' : 'Footprint ▲';
+});
+
+document.querySelectorAll('.footprint-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    footprint = {
+      width: parseFloat(btn.dataset.w),
+      depth: parseFloat(btn.dataset.d),
+      swingW: parseFloat(btn.dataset.sw),
+    };
+    document.querySelectorAll('.footprint-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    footprintPopup.classList.remove('open');
+    footprintBtn.textContent = 'Footprint ▲';
+    syncUI();
+    rebuild(curH, nRafters);
+  });
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#footprint-wrap')) {
+    footprintPopup.classList.remove('open');
+    footprintBtn.textContent = 'Footprint ▲';
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Profile picker
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1107,7 +1179,7 @@ document.querySelectorAll('.profile-opt').forEach(btn => {
 });
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('#profile-wrap')) {
+  if (!e.target.closest('#profile-wrap') && !e.target.closest('#footprint-wrap')) {
     profilePopup.classList.remove('open');
     profileBtn.textContent = 'Rafter Profile ▲';
   }
@@ -1146,6 +1218,8 @@ window.addEventListener('keydown', e => {
     closeControlsSheet();
     profilePopup.classList.remove('open');
     profileBtn.textContent = 'Rafter Profile ▲';
+    footprintPopup.classList.remove('open');
+    footprintBtn.textContent = 'Footprint ▲';
   }
 });
 

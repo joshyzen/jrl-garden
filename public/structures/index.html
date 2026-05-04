@@ -169,6 +169,73 @@
     .profile-opt:hover, .footprint-opt:hover { background: rgba(0,0,0,0.05); }
     .profile-opt.active, .footprint-opt.active { color: #7A5528; }
 
+    /* ── Cut List panel ────────────────────────────────────────── */
+    #cutlist-panel {
+      position: absolute; top: 18px; left: 18px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 12px; color: #444;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.13);
+      z-index: 10; line-height: 1.7;
+      min-width: 180px;
+      max-width: min(520px, calc(100vw - 36px));
+    }
+    .cutlist-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 0;
+    }
+    .cutlist-header h3 {
+      font-size: 11px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: #888; margin: 0;
+    }
+    .cutlist-actions {
+      display: flex; gap: 5px; align-items: center;
+    }
+    .cutlist-actions button {
+      background: none; border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 4px; cursor: pointer;
+      color: #666; font-size: 11px; font-weight: 700;
+      padding: 1px 6px; line-height: 1.6;
+      transition: background 0.12s;
+    }
+    .cutlist-actions button:hover { background: rgba(0,0,0,0.06); }
+    #cutlist-toggle {
+      font-size: 16px; border: none !important; padding: 0 0 0 4px !important;
+      color: #aaa;
+    }
+    #cutlist-toggle:hover { color: #555; }
+    #cutlist-body-wrap {
+      display: none;
+      margin-top: 9px;
+      overflow-x: auto;
+    }
+    #cutlist-panel.open #cutlist-body-wrap { display: block; }
+    #cutlist-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 11.5px;
+    }
+    #cutlist-table th, #cutlist-table td {
+      padding: 3px 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      white-space: nowrap;
+    }
+    #cutlist-table th {
+      font-size: 10px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    #cutlist-table td.cl-note {
+      white-space: normal; color: #666; min-width: 160px;
+    }
+    #cutlist-footer {
+      margin-top: 7px; font-size: 11px; color: #888;
+      border-top: 1px solid #e8e8e8; padding-top: 5px;
+    }
+
     /* ── Hint ──────────────────────────────────────────────────── */
     #hint {
       position: absolute; bottom: 24px; right: 18px;
@@ -416,6 +483,27 @@
     </div>
   </div>
 
+  <!-- ── Cut List panel ──────────────────────────────────────────────── -->
+  <div id="cutlist-panel">
+    <div class="cutlist-header">
+      <h3>Cut List</h3>
+      <div class="cutlist-actions">
+        <button type="button" id="cutlist-csv"   title="Download CSV">CSV</button>
+        <button type="button" id="cutlist-print" title="Print">Print</button>
+        <button type="button" id="cutlist-toggle" title="Expand">+</button>
+      </div>
+    </div>
+    <div id="cutlist-body-wrap">
+      <table id="cutlist-table">
+        <thead>
+          <tr><th>Qty</th><th>Size</th><th>Cut</th><th>Buy</th><th class="cl-note">Note</th></tr>
+        </thead>
+        <tbody id="cutlist-body"></tbody>
+      </table>
+      <div id="cutlist-footer">Total: <strong id="cutlist-bf">—</strong></div>
+    </div>
+  </div>
+
   <div id="controls-shell">
     <div id="controls-backdrop" aria-hidden="true"></div>
     <div id="controls-sheet">
@@ -513,6 +601,12 @@ const L3_H   = 0.125;   // 1.5 in (Y height)
 const L1_OH  = 1.25;    // 15 in each end (X-direction beams & slats)
 const L0_OH  = 1.25;    // 15 in each end (Z-direction cross-beams)
 const L2_OH  = 1.50;    // 18 in each end (Z-direction rafters)
+
+// Standard lumber stock lengths (ft) used by the cut list
+const STOCK_LENGTHS = [8, 10, 12, 14, 16, 18, 20];
+function stockLen(pieceLen) {
+  return STOCK_LENGTHS.find(s => s >= pieceLen) || STOCK_LENGTHS[STOCK_LENGTHS.length - 1];
+}
 
 // Pergola colors
 const C_POST  = 0x6B4220;
@@ -659,15 +753,20 @@ const EXTRUDE_OPTS = { steps: 1, bevelEnabled: false };
 function buildPergola(h, n, profile) {
   const W         = footprint.width;
   const D         = footprint.depth;
-  const HALF_W    = W / 2;
-  const L1_LEN    = W + 2 * L1_OH;
-  const L0_LEN    = D + 2 * L0_OH;
-  const L2_LEN    = D + 2 * L2_OH;
+  // W and D are outer-edge to outer-edge; post centers are inset by half a post width
+  const PC_X      = W / 2 - POST_W / 2;   // post center X offset from midline
+  const PC_Z_NEAR = POST_W / 2;            // post center Z (front row)
+  const PC_Z_FAR  = D - POST_W / 2;        // post center Z (back row)
+  const C_SPAN_X  = W - POST_W;            // center-to-center span in X
+  const C_SPAN_Z  = D - POST_W;            // center-to-center span in Z
+  const L1_LEN    = C_SPAN_X + 2 * L1_OH;
+  const L0_LEN    = C_SPAN_Z + 2 * L0_OH;
+  const L2_LEN    = C_SPAN_Z + 2 * L2_OH;
   const L3_LEN    = L1_LEN;
-  const RAFTER_X0 = -HALF_W;
-  const RAFTER_X1 =  HALF_W;
+  const RAFTER_X0 = -PC_X;
+  const RAFTER_X1 =  PC_X;
   const RAFTER_CZ = D / 2;
-  const CORNER_XZ = [[-HALF_W, 0], [HALF_W, 0], [-HALF_W, D], [HALF_W, D]];
+  const CORNER_XZ = [[-PC_X, PC_Z_NEAR], [PC_X, PC_Z_NEAR], [-PC_X, PC_Z_FAR], [PC_X, PC_Z_FAR]];
 
   const group   = new THREE.Group();
   const geoPool = [];
@@ -731,7 +830,7 @@ function buildPergola(h, n, profile) {
   geoPool.push(l1Geo);
 
   const d   = 0.25 + L1_T / 2;
-  const l1Zs = [-d, +d, D - d, D + d];
+  const l1Zs = [PC_Z_NEAR - d, PC_Z_NEAR + d, PC_Z_FAR - d, PC_Z_FAR + d];
   l1Zs.forEach(pz => mesh(l1Geo, matL1, 0, h, pz));
 
   // ── L2 Rafters ───────────────────────────────────────────────────────────
@@ -1001,11 +1100,16 @@ function rebuildGravel() {
   }
   const W = footprint.width;
   const D = footprint.depth;
-  const GW = 2 * (W / 2 + FOOTING_R + 2);
-  const GD = D + 2 * (FOOTING_R + 2);
+  // Post centers are inset by POST_W/2 from the outer edges;
+  // footings are centered on posts, gravel extends 2 ft past each footing.
+  const PC_X     = W / 2 - POST_W / 2;
+  const PC_Z_MID = D / 2;
+  const C_SPAN_Z = D - POST_W;
+  const GW = 2 * (PC_X + FOOTING_R + 2);
+  const GD = C_SPAN_Z + 2 * (FOOTING_R + 2);
   gravelMesh = new THREE.Mesh(new THREE.PlaneGeometry(GW, GD), gravelMat);
   gravelMesh.rotation.x    = -Math.PI / 2;
-  gravelMesh.position.set(0, 0.006, D / 2);
+  gravelMesh.position.set(0, 0.006, PC_Z_MID);
   gravelMesh.receiveShadow = true;
   scene.add(gravelMesh);
 }
@@ -1051,17 +1155,20 @@ const legendL2      = document.getElementById('legend-l2');
 const legendSwing   = document.getElementById('legend-swing');
 
 function syncUI() {
-  const W = footprint.width;
-  const D = footprint.depth;
+  const W        = footprint.width;
+  const D        = footprint.depth;
+  const C_SPAN_X = W - POST_W;   // center-to-center X span
+  const C_SPAN_Z = D - POST_W;   // center-to-center Z span
   hval.textContent    = curH.toFixed(1) + ' ft';
   legendH.textContent = curH.toFixed(1) + ' ft';
-  const sp = W / (nRafters - 1) * 12;
+  const sp = C_SPAN_X / (nRafters - 1) * 12;
   legendSpacing.textContent = sp.toFixed(1) + ' in o.c.';
   legendFP.textContent    = W + ' × ' + D + ' ft';
-  legendL0.textContent    = (D + 2 * L0_OH).toFixed(1) + ' ft';
-  legendL1.textContent    = (W + 2 * L1_OH).toFixed(1) + ' ft';
-  legendL2.textContent    = (D + 2 * L2_OH).toFixed(1) + ' ft';
+  legendL0.textContent    = (C_SPAN_Z + 2 * L0_OH).toFixed(1) + ' ft';
+  legendL1.textContent    = (C_SPAN_X + 2 * L1_OH).toFixed(1) + ' ft';
+  legendL2.textContent    = (C_SPAN_Z + 2 * L2_OH).toFixed(1) + ' ft';
   legendSwing.textContent = footprint.swingW + ' ft';
+  syncCutList();
 }
 
 syncUI();
@@ -1238,6 +1345,143 @@ legendToggle.addEventListener('click', () => {
   const collapsed = legendEl.classList.toggle('collapsed');
   legendToggle.textContent = collapsed ? '+' : '−';
   legendToggle.title       = collapsed ? 'Expand' : 'Minimize';
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Materials & Cut List
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Returns an array of line items describing every piece of lumber needed.
+// All lengths are in feet (decimal), rounded to the nearest 1/8".
+function getMaterials() {
+  const W        = footprint.width;
+  const D        = footprint.depth;
+  const C_SPAN_X = W - POST_W;
+  const C_SPAN_Z = D - POST_W;
+  const l1Len    = C_SPAN_X + 2 * L1_OH;
+  const l0Len    = C_SPAN_Z + 2 * L0_OH;
+  const l2Len    = C_SPAN_Z + 2 * L2_OH;
+
+  // Post length: from base plate (grade) to top of L1 beam.
+  // Posts sit on metal base plates on top of concrete footings — not buried.
+  const postLen  = curH + L1_H / 2;
+
+  // Round to nearest 1/8 ft (1.5 in)
+  function r8(v) { return Math.round(v * 8) / 8; }
+
+  const items = [
+    // Posts
+    { qty: 4,         spec: '6×6',  len: r8(postLen), note: 'Posts (on metal base plate, ' + curH.toFixed(1) + ' ft post height + beam depth)' },
+    // L0 cross-beams (only if shown)
+    showL0
+      ? { qty: 4,     spec: '2×8',  len: r8(l0Len),   note: 'L0 cross-beams (Z-span, outer pair each side)' }
+      : null,
+    // L1 beams (two double-sandwiched pairs, so 4 boards)
+    { qty: 4,         spec: '2×8',  len: r8(l1Len),   note: 'L1 beams (X-span, two per side)' },
+    // L2 rafters
+    { qty: nRafters,  spec: '4×6',  len: r8(l2Len),   note: 'L2 rafters (Z-span)' },
+    // L3 slats (optional)
+    showL3 && nL3 > 0
+      ? { qty: nL3,   spec: '2×2',  len: r8(l1Len),   note: 'L3 slats (X-span, on top of rafters)' }
+      : null,
+    // Swing seat + back (rough cedar 1×6 equivalents)
+    { qty: 8,         spec: '1×4',  len: r8(footprint.swingW + 0.1), note: 'Swing seat boards (X-span)' },
+    { qty: 10,        spec: '1×4',  len: r8(footprint.swingW + 0.1), note: 'Swing back boards (X-span)' },
+  ].filter(Boolean);
+
+  return items;
+}
+
+function syncCutList() {
+  const panel  = document.getElementById('cutlist-panel');
+  if (!panel || !panel.classList.contains('open')) return;
+  const items  = getMaterials();
+  const tbody  = document.getElementById('cutlist-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  let totalBd = 0;
+  items.forEach(it => {
+    const stock = stockLen(it.len);
+    const bf    = it.qty * stock * (
+      it.spec === '6×6' ? (5.5 * 5.5 / 144) :
+      it.spec === '4×6' ? (3.5 * 5.5 / 144) :
+      it.spec === '2×8' ? (1.5 * 7.25 / 144) :
+      it.spec === '2×2' ? (1.5 * 1.5 / 144) :
+      it.spec === '1×4' ? (0.75 * 3.5 / 144) : 1
+    );
+    totalBd += bf;
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + it.qty + '</td>' +
+      '<td>' + it.spec + '</td>' +
+      '<td>' + it.len.toFixed(3).replace(/\.?0+$/, '') + ' ft</td>' +
+      '<td>' + stock + ' ft</td>' +
+      '<td class="cl-note">' + it.note + '</td>';
+    tbody.appendChild(tr);
+  });
+  const tfoot = document.getElementById('cutlist-bf');
+  if (tfoot) tfoot.textContent = totalBd.toFixed(1) + ' bd ft (approx)';
+}
+
+document.getElementById('cutlist-toggle').addEventListener('click', () => {
+  const panel = document.getElementById('cutlist-panel');
+  const btn   = document.getElementById('cutlist-toggle');
+  const open  = panel.classList.toggle('open');
+  btn.textContent = open ? '−' : '+';
+  btn.title       = open ? 'Minimize' : 'Expand';
+  if (open) syncCutList();
+});
+
+document.getElementById('cutlist-print').addEventListener('click', () => {
+  const items   = getMaterials();
+  const W = footprint.width, D = footprint.depth;
+  const rows = items.map(it => {
+    const stock = stockLen(it.len);
+    return '<tr><td>' + it.qty + '</td><td>' + it.spec + '</td><td>' +
+      it.len.toFixed(3).replace(/\.?0+$/, '') + ' ft</td><td>' + stock +
+      ' ft</td><td>' + it.note + '</td></tr>';
+  }).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Pergola Cut List</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 24px; font-size: 13px; }
+  h2 { margin: 0 0 4px; }
+  .meta { color: #666; margin-bottom: 16px; font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+  th { background: #f3f3f3; font-weight: 700; }
+  @media print { button { display: none; } }
+</style></head><body>
+<h2>Pergola Cut List</h2>
+<div class="meta">
+  Footprint: ${W} × ${D} ft (outer–outer) &nbsp;·&nbsp;
+  Post height: ${curH.toFixed(1)} ft &nbsp;·&nbsp;
+  Rafters: ${nRafters} &nbsp;·&nbsp;
+  Swing: ${footprint.swingW} ft
+</div>
+<table>
+  <thead><tr><th>Qty</th><th>Size</th><th>Cut length</th><th>Buy (stock)</th><th>Note</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<p style="margin-top:12px;color:#888;font-size:11px;">Generated ${new Date().toLocaleDateString()}. Verify all measurements on site before cutting.</p>
+<button onclick="window.print()" style="margin-top:12px;padding:8px 20px;font-size:13px;cursor:pointer;">Print</button>
+</body></html>`);
+  win.document.close();
+});
+
+document.getElementById('cutlist-csv').addEventListener('click', () => {
+  const items = getMaterials();
+  const W = footprint.width, D = footprint.depth;
+  const header = 'Qty,Size,Cut Length (ft),Stock Length (ft),Note\n';
+  const rows   = items.map(it =>
+    [it.qty, it.spec, it.len.toFixed(3).replace(/\.?0+$/, ''), stockLen(it.len), '"' + it.note + '"'].join(',')
+  ).join('\n');
+  const meta = `"Pergola ${W}×${D}ft | Post height: ${curH}ft | Rafters: ${nRafters} | Swing: ${footprint.swingW}ft"\n\n`;
+  const blob = new Blob([meta + header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pergola-cut-list.csv';
+  a.click();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

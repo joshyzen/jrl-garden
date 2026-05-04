@@ -608,6 +608,29 @@ function stockLen(pieceLen) {
   return STOCK_LENGTHS.find(s => s >= pieceLen) || STOCK_LENGTHS[STOCK_LENGTHS.length - 1];
 }
 
+// Format decimal feet as  9' 4½"  with total-inch count in parens
+const FRAC_GLYPHS = ['', '⅛', '¼', '⅜', '½', '⅝', '¾', '⅞'];
+function fmtFtIn(decFt) {
+  const totalEighthsIn = Math.round(decFt * 12 * 8);  // total 1/8-inches
+  const ft             = Math.floor(totalEighthsIn / 96);
+  const remEighths     = totalEighthsIn - ft * 96;
+  const wholeIn        = Math.floor(remEighths / 8);
+  const fracIdx        = remEighths % 8;
+  const inPart         = wholeIn + FRAC_GLYPHS[fracIdx];
+  const inStr          = (wholeIn > 0 || fracIdx > 0) ? ' ' + inPart + '"' : '';
+  // Total inches as a clean number (always a multiple of ⅛ in)
+  const totalIn        = totalEighthsIn / 8;
+  const totalInFmt     = Number.isInteger(totalIn) ? totalIn + '"' : (Math.floor(totalIn) + FRAC_GLYPHS[fracIdx] + '"');
+  return ft + '\'' + inStr + ' (' + totalInFmt + ')';
+}
+// Plain version for CSV / print (no unicode fractions)
+function fmtFtInPlain(decFt) {
+  const totalIn = Math.round(decFt * 12 * 8) / 8;
+  const ft      = Math.floor(totalIn / 12);
+  const remIn   = +(totalIn - ft * 12).toFixed(4);
+  return ft + '\'' + (remIn > 0 ? ' ' + remIn + '"' : '') + ' (' + totalIn + '")';
+}
+
 // Pergola colors
 const C_POST  = 0x6B4220;
 const C_L1    = 0xA07848;
@@ -809,7 +832,7 @@ function buildPergola(h, n, profile) {
 
   // ── L0 Cross-Beams (2×8, Z-span, sandwiches posts in X, sits below L1) ───
   if (showL0) {
-    const d0    = 0.25 + L1_T / 2;
+    const d0    = POST_W / 2 + L1_T / 2;
     const l0CY  = h - L1_H;
     const l0Geo = new THREE.ExtrudeGeometry(
       boardShape(L0_LEN, L1_H, L0_ARC), { ...EXTRUDE_OPTS, depth: L1_T }
@@ -817,7 +840,7 @@ function buildPergola(h, n, profile) {
     l0Geo.translate(0, -L1_H / 2, -L1_T / 2);
     l0Geo.rotateY(Math.PI / 2);
     geoPool.push(l0Geo);
-    [-4.5 - d0, -4.5 + d0, 4.5 - d0, 4.5 + d0].forEach(px =>
+    [-PC_X - d0, -PC_X + d0, PC_X - d0, PC_X + d0].forEach(px =>
       mesh(l0Geo, matL0, px, l0CY, RAFTER_CZ)
     );
   }
@@ -829,7 +852,7 @@ function buildPergola(h, n, profile) {
   l1Geo.translate(0, -L1_H / 2, -L1_T / 2);
   geoPool.push(l1Geo);
 
-  const d   = 0.25 + L1_T / 2;
+  const d   = POST_W / 2 + L1_T / 2;
   const l1Zs = [PC_Z_NEAR - d, PC_Z_NEAR + d, PC_Z_FAR - d, PC_Z_FAR + d];
   l1Zs.forEach(pz => mesh(l1Geo, matL1, 0, h, pz));
 
@@ -1414,8 +1437,8 @@ function syncCutList() {
     tr.innerHTML =
       '<td>' + it.qty + '</td>' +
       '<td>' + it.spec + '</td>' +
-      '<td>' + it.len.toFixed(3).replace(/\.?0+$/, '') + ' ft</td>' +
-      '<td>' + stock + ' ft</td>' +
+      '<td>' + fmtFtIn(it.len) + '</td>' +
+      '<td>' + stock + '\'</td>' +
       '<td class="cl-note">' + it.note + '</td>';
     tbody.appendChild(tr);
   });
@@ -1438,8 +1461,8 @@ document.getElementById('cutlist-print').addEventListener('click', () => {
   const rows = items.map(it => {
     const stock = stockLen(it.len);
     return '<tr><td>' + it.qty + '</td><td>' + it.spec + '</td><td>' +
-      it.len.toFixed(3).replace(/\.?0+$/, '') + ' ft</td><td>' + stock +
-      ' ft</td><td>' + it.note + '</td></tr>';
+      fmtFtInPlain(it.len) + '</td><td>' + stock +
+      '\'</td><td>' + it.note + '</td></tr>';
   }).join('');
   const win = window.open('', '_blank');
   win.document.write(`<!DOCTYPE html><html><head><title>Pergola Cut List</title>
@@ -1472,10 +1495,11 @@ document.getElementById('cutlist-print').addEventListener('click', () => {
 document.getElementById('cutlist-csv').addEventListener('click', () => {
   const items = getMaterials();
   const W = footprint.width, D = footprint.depth;
-  const header = 'Qty,Size,Cut Length (ft),Stock Length (ft),Note\n';
-  const rows   = items.map(it =>
-    [it.qty, it.spec, it.len.toFixed(3).replace(/\.?0+$/, ''), stockLen(it.len), '"' + it.note + '"'].join(',')
-  ).join('\n');
+  const header = 'Qty,Size,Cut Length,Cut (total in),Stock Length (ft),Note\n';
+  const rows   = items.map(it => {
+    const totalIn = +(it.len * 12).toFixed(4);
+    return [it.qty, it.spec, '"' + fmtFtInPlain(it.len) + '"', totalIn, stockLen(it.len), '"' + it.note + '"'].join(',');
+  }).join('\n');
   const meta = `"Pergola ${W}×${D}ft | Post height: ${curH}ft | Rafters: ${nRafters} | Swing: ${footprint.swingW}ft"\n\n`;
   const blob = new Blob([meta + header + rows], { type: 'text/csv' });
   const a = document.createElement('a');

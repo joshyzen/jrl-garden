@@ -82,92 +82,165 @@
     .meas-label { color: #666; }
     .meas-val   { font-weight: 700; color: #2a2a2a; white-space: nowrap; }
 
-    /* ── Controls shell (desktop bar + mobile bottom sheet) ───── */
+    /* ── Desktop: horizontal pill bar ─────────────────────────── */
     #controls-shell {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
+      position: fixed;
+      bottom: 24px; left: 50%;
       transform: translateX(-50%);
-      z-index: 10;
-      user-select: none;
+      z-index: 10; user-select: none;
     }
-    #controls-backdrop {
-      display: none;
-    }
-    #controls-fab {
-      display: none;
-    }
-    .controls-sheet-head {
-      display: none;
-    }
-    #controls-sheet {
-      display: contents;
-    }
+    #controls-backdrop { display: none; }
+    #controls-fab      { display: none; }
+    .controls-sheet-head { display: none; }
+    #controls-sheet    { display: contents; }
 
     #controls {
-      position: relative;
-      background: rgba(255,255,255,0.90);
+      background: rgba(255,255,255,0.92);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(0,0,0,0.08);
-      border-radius: 10px;
-      padding: 11px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      border-radius: 12px;
+      padding: 7px 16px;
+      display: flex; flex-direction: row; align-items: center;
+      gap: 0;
       box-shadow: 0 3px 14px rgba(0,0,0,0.13);
+      max-width: calc(100vw - 36px);
+      overflow-x: auto;
     }
-    .ctrl-block {
-      display: contents;
+
+    /* Each section is a horizontal flex strip */
+    .ctrl-section {
+      display: flex; flex-direction: row; align-items: center; gap: 6px;
+      padding: 0 14px; flex-shrink: 0;
     }
-    #controls label { font-size: 13px; color: #555; white-space: nowrap; }
-    #slider { width: 180px; cursor: pointer; accent-color: #7A5528; }
-    #hval { font-size: 14px; font-weight: 700; color: #2a2a2a; min-width: 52px; }
-    .ctrl-sep { width: 1px; height: 22px; background: rgba(0,0,0,0.13); flex-shrink: 0; }
+    .ctrl-section + .ctrl-section {
+      border-left: 1px solid rgba(0,0,0,0.12);
+    }
+    .ctrl-section:first-child { padding-left: 0; }
+    .ctrl-section:last-child  { padding-right: 0; }
+
+    /* Hide section labels in the horizontal bar */
+    .ctrl-section-label { display: none; }
+
+    /* ── Pill toggles ──────────────────────────────────────────── */
+    .pill-group { display: flex; flex-wrap: nowrap; gap: 5px; }
+    .pill {
+      padding: 5px 11px; border-radius: 20px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: none; font-size: 12px; font-weight: 600; color: #2a2a2a;
+      cursor: pointer; white-space: nowrap; line-height: 1.4;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .pill:hover  { background: rgba(0,0,0,0.04); }
+    .pill.active { background: #7A5528; color: #fff; border-color: #7A5528; }
+
+    /* ── Inputs ────────────────────────────────────────────────── */
+    #controls label { font-size: 12px; color: #555; white-space: nowrap; }
     #nraf, #nl3 {
-      width: 48px; padding: 3px 5px;
+      width: 52px; padding: 4px 6px;
       font-size: 13px; font-weight: 700; color: #2a2a2a;
-      border: 1px solid rgba(0,0,0,0.18); border-radius: 5px;
+      border: 1px solid rgba(0,0,0,0.18); border-radius: 6px;
       background: #fff; text-align: center; cursor: text;
     }
     #nraf:focus, #nl3:focus { outline: 2px solid #7A5528; outline-offset: 1px; }
-    #nl3:disabled { opacity: 0.38; cursor: not-allowed; }
-    #l3toggle { cursor: pointer; accent-color: #7A5528; width: 15px; height: 15px; flex-shrink: 0; }
+    #slider { width: 130px; cursor: pointer; accent-color: #7A5528; }
+    #hval   { font-size: 13px; font-weight: 700; color: #2a2a2a; min-width: 44px; }
+    #nl3-wrap {
+      display: none; align-items: center; gap: 6px;
+    }
+    #nl3-wrap.visible { display: flex; }
 
-    /* ── Profile & Footprint pickers ───────────────────────────── */
-    #profile-btn, #footprint-btn {
-      background: none; border: 1px solid rgba(0,0,0,0.18); border-radius: 5px;
-      padding: 3px 9px; font-size: 13px; font-weight: 700; color: #2a2a2a;
-      cursor: pointer; white-space: nowrap; line-height: 1.6;
-      transition: background 0.12s;
+    /* ── Mobile (≤880px): FAB + bottom sheet ──────────────────── */
+    @media (max-width: 880px) {
+      #controls-shell {
+        position: static; transform: none; pointer-events: none;
+      }
+      #controls-backdrop {
+        display: block; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.35); z-index: 40;
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity 0.22s ease, visibility 0.22s ease;
+      }
+      #controls-shell.open #controls-backdrop {
+        opacity: 1; visibility: visible; pointer-events: auto;
+      }
+      #controls-fab {
+        display: flex; align-items: center; justify-content: center;
+        position: fixed; left: 50%;
+        bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        transform: translateX(-50%);
+        width: 52px; height: 52px; border-radius: 50%;
+        border: 1px solid rgba(0,0,0,0.10);
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+        cursor: pointer; z-index: 50; color: #7A5528; pointer-events: auto;
+        transition: transform 0.15s ease;
+      }
+      #controls-fab:active { transform: translateX(-50%) scale(0.96); }
+      #controls-fab svg { width: 26px; height: 26px; }
+      #controls-shell.open #controls-fab { display: none; }
+
+      .controls-sheet-head {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-shrink: 0; padding: 14px 18px 10px;
+        border-bottom: 1px solid rgba(0,0,0,0.07);
+      }
+      .controls-sheet-head span {
+        font-size: 14px; font-weight: 700; color: #2a2a2a; letter-spacing: 0.02em;
+      }
+      #controls-close {
+        display: flex; align-items: center; justify-content: center;
+        width: 38px; height: 38px; margin: -6px -4px -6px 0;
+        border: none; border-radius: 10px;
+        background: rgba(0,0,0,0.05); color: #444;
+        font-size: 22px; line-height: 1; cursor: pointer;
+      }
+      #controls-close:active { background: rgba(0,0,0,0.10); }
+
+      #controls-sheet {
+        display: flex; flex-direction: column;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+        max-height: min(78vh, 100% - 48px);
+        background: rgba(255,255,255,0.98);
+        backdrop-filter: blur(10px);
+        border-radius: 16px 16px 0 0;
+        border: 1px solid rgba(0,0,0,0.08); border-bottom: none;
+        box-shadow: 0 -8px 32px rgba(0,0,0,0.14);
+        transform: translateY(105%);
+        transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        pointer-events: none;
+      }
+      #controls-shell.open #controls-sheet {
+        transform: translateY(0); pointer-events: auto;
+      }
+
+      /* Sheet layout: vertical sections */
+      #controls {
+        flex-direction: column; gap: 0; max-width: none;
+        padding: 4px 0 8px; border-radius: 0; border: none;
+        box-shadow: none; background: transparent; overflow-x: unset;
+        overflow-y: auto; -webkit-overflow-scrolling: touch;
+      }
+      .ctrl-section {
+        flex-direction: column; align-items: stretch;
+        padding: 12px 18px; gap: 8px;
+        border-left: none !important;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+      }
+      .ctrl-section:last-child { border-bottom: none; }
+      .ctrl-section-label {
+        display: block;
+        font-size: 10px; font-weight: 700; letter-spacing: .07em;
+        text-transform: uppercase; color: #aaa;
+      }
+      .pill-group { flex-wrap: wrap; gap: 7px; }
+      .pill { padding: 7px 14px; font-size: 13px; }
+      #nraf, #nl3 { width: 100%; padding: 10px 12px; font-size: 16px; }
+      #slider { width: 100%; margin-top: 6px; }
+      #hval { align-self: flex-end; font-size: 14px; }
+      #nl3-wrap { margin-top: 4px; gap: 8px; }
+      #nl3-wrap #nl3 { width: 80px; padding: 6px 8px; font-size: 14px; }
     }
-    #profile-btn:hover, #footprint-btn:hover { background: rgba(0,0,0,0.05); }
-    #profile-wrap, #footprint-wrap {
-      position: relative;
-    }
-    #profile-popup, #footprint-popup {
-      display: none;
-      position: absolute; bottom: calc(100% + 8px); left: 50%;
-      transform: translateX(-50%);
-      background: rgba(255,255,255,0.97);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 8px;
-      padding: 4px 0;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.15);
-      flex-direction: column;
-      min-width: 148px;
-      z-index: 25;
-    }
-    #profile-popup.open, #footprint-popup.open { display: flex; }
-    .profile-opt, .footprint-opt {
-      background: none; border: none;
-      padding: 8px 16px; cursor: pointer;
-      font-size: 13px; font-weight: 600; color: #2a2a2a;
-      text-align: left; white-space: nowrap;
-      transition: background 0.1s;
-    }
-    .profile-opt:hover, .footprint-opt:hover { background: rgba(0,0,0,0.05); }
-    .profile-opt.active, .footprint-opt.active { color: #7A5528; }
 
     /* ── Cut List panel ────────────────────────────────────────── */
     #cutlist-panel {
@@ -238,212 +311,15 @@
 
     /* ── Hint ──────────────────────────────────────────────────── */
     #hint {
-      position: absolute; bottom: 24px; right: 18px;
+      position: fixed; bottom: 24px; right: 18px;
       font-size: 11px; color: #aaa;
       z-index: 10; pointer-events: none;
     }
-
-    /* ── Mobile: FAB + bottom sheet ───────────────────────────── */
     @media (max-width: 880px) {
-      #controls-shell {
-        position: static;
-        transform: none;
-        pointer-events: none;
-      }
-
-      #controls-backdrop {
-        display: block;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.38);
-        z-index: 40;
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity 0.22s ease, visibility 0.22s ease;
-      }
-      #controls-shell.open #controls-backdrop {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-      }
-
-      #controls-fab {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        left: 50%;
-        bottom: max(16px, env(safe-area-inset-bottom, 0px));
-        transform: translateX(-50%);
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        background: rgba(255, 255, 255, 0.95);
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
-        cursor: pointer;
-        z-index: 50;
-        color: #7A5528;
-        pointer-events: auto;
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-      }
-      #controls-fab:active {
-        transform: translateX(-50%) scale(0.96);
-      }
-      #controls-fab svg {
-        width: 26px;
-        height: 26px;
-      }
-      #controls-shell.open #controls-fab {
-        display: none;
-      }
-
-      #controls-sheet {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 45;
-        max-height: min(78vh, 100% - 48px);
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(10px);
-        border-radius: 16px 16px 0 0;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-bottom: none;
-        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.14);
-        transform: translateY(105%);
-        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        pointer-events: none;
-      }
-      #controls-shell.open #controls-sheet {
-        transform: translateY(0);
-        pointer-events: auto;
-      }
-
-      .controls-sheet-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-shrink: 0;
-        padding: 14px 16px 10px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-      }
-      .controls-sheet-head span {
-        font-size: 14px;
-        font-weight: 700;
-        color: #2a2a2a;
-        letter-spacing: 0.02em;
-      }
-      #controls-close {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        margin: -8px -6px -8px 0;
-        border: none;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.05);
-        color: #444;
-        font-size: 22px;
-        line-height: 1;
-        cursor: pointer;
-      }
-      #controls-close:active {
-        background: rgba(0, 0, 0, 0.1);
-      }
-
-      #controls {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
-        padding: 16px 18px 20px;
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
-        background: transparent;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-      .ctrl-block {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        width: 100%;
-      }
-      .ctrl-block.ctrl-l3 {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        column-gap: 10px;
-        row-gap: 8px;
-      }
-      .ctrl-block.ctrl-l3 label {
-        flex: 1 1 auto;
-        min-width: 0;
-      }
-      .ctrl-block.ctrl-l0 {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-      }
-      .ctrl-block.ctrl-height {
-        padding-top: 14px;
-        margin-top: 6px;
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-      }
-      .ctrl-sep {
-        display: none;
-      }
-      #slider {
-        width: 100%;
-      }
-      #hval {
-        align-self: flex-end;
-      }
-      #nraf, #nl3 {
-        width: 100%;
-        max-width: none;
-        padding: 10px 12px;
-        font-size: 16px;
-      }
-      #nl3 {
-        flex: 1 1 120px;
-        max-width: 160px;
-        margin-left: auto;
-      }
-      #profile-wrap, #footprint-wrap {
-        width: 100%;
-      }
-      #profile-btn, #footprint-btn {
-        width: 100%;
-        padding: 10px 12px;
-        font-size: 15px;
-      }
-      /* In-flow menus: avoids clip from #controls overflow */
-      #profile-popup, #footprint-popup {
-        position: static;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        transform: none;
-        min-width: unset;
-        width: 100%;
-        margin-top: 8px;
-        z-index: auto;
-      }
-
       #hint {
         bottom: max(88px, calc(16px + env(safe-area-inset-bottom, 0px) + 52px + 12px));
-        right: 12px;
-        max-width: 42vw;
-        text-align: right;
-        line-height: 1.35;
+        right: 12px; max-width: 42vw;
+        text-align: right; line-height: 1.35;
       }
     }
   </style>
@@ -508,53 +384,66 @@
     <div id="controls-backdrop" aria-hidden="true"></div>
     <div id="controls-sheet">
       <div class="controls-sheet-head">
-        <span>Pergola options</span>
-        <button type="button" id="controls-close" aria-label="Close settings">×</button>
+        <span>Pergola Options</span>
+        <button type="button" id="controls-close" aria-label="Close">×</button>
       </div>
       <div id="controls">
-        <div class="ctrl-block">
-          <div id="footprint-wrap">
-            <button type="button" id="footprint-btn">Footprint ▲</button>
-            <div id="footprint-popup">
-              <button type="button" class="footprint-opt active" data-w="9" data-d="5" data-sw="5">9 × 5 ft · 5 ft swing</button>
-              <button type="button" class="footprint-opt" data-w="10" data-d="5" data-sw="6">10 × 5 ft · 6 ft swing</button>
-              <button type="button" class="footprint-opt" data-w="10" data-d="5.5" data-sw="6">10 × 5.5 ft · 6 ft swing</button>
-              <button type="button" class="footprint-opt" data-w="10" data-d="6" data-sw="6">10 × 6 ft · 6 ft swing</button>
-            </div>
+
+        <!-- Footprint -->
+        <div class="ctrl-section">
+          <div class="ctrl-section-label">Footprint</div>
+          <div class="pill-group">
+            <button type="button" class="pill fp-pill active" data-w="9"  data-d="5"   data-sw="5">9×5</button>
+            <button type="button" class="pill fp-pill"        data-w="10" data-d="5"   data-sw="6">10×5</button>
+            <button type="button" class="pill fp-pill"        data-w="10" data-d="5.5" data-sw="6">10×5½</button>
+            <button type="button" class="pill fp-pill"        data-w="10" data-d="6"   data-sw="6">10×6</button>
           </div>
         </div>
-        <span class="ctrl-sep"></span>
-        <div class="ctrl-block">
-          <div id="profile-wrap">
-            <button type="button" id="profile-btn">Rafter Profile ▲</button>
-            <div id="profile-popup">
-              <button type="button" class="profile-opt active" data-p="1">Rafter Profile 1</button>
-              <button type="button" class="profile-opt" data-p="3">Rafter Profile 2</button>
-            </div>
+
+        <!-- Rafter Profile -->
+        <div class="ctrl-section">
+          <div class="ctrl-section-label">Rafter Profile</div>
+          <div class="pill-group">
+            <button type="button" class="pill prof-pill active" data-p="1">Arc</button>
+            <button type="button" class="pill prof-pill"        data-p="3">Chamfer</button>
           </div>
         </div>
-        <span class="ctrl-sep"></span>
-        <div class="ctrl-block">
-          <label for="nraf">Rafter Count</label>
+
+        <!-- Rafter Count -->
+        <div class="ctrl-section">
+          <label for="nraf" class="ctrl-section-label">Rafters</label>
           <input type="number" id="nraf" min="2" max="20" value="7">
         </div>
-        <span class="ctrl-sep"></span>
-        <div class="ctrl-block ctrl-l3">
-          <input type="checkbox" id="l3toggle">
-          <label for="l3toggle">Show L3 Slats</label>
-          <input type="number" id="nl3" min="1" max="40" value="8" disabled>
+
+        <!-- Visibility -->
+        <div class="ctrl-section">
+          <div class="ctrl-section-label">Show / Hide</div>
+          <div class="pill-group">
+            <button type="button" class="pill vis-pill active" data-vis="l0">L0 Beams</button>
+            <button type="button" class="pill vis-pill"        data-vis="l3">L3 Slats</button>
+          </div>
+          <div id="nl3-wrap">
+            <input type="number" id="nl3" min="1" max="40" value="8">
+          </div>
         </div>
-        <span class="ctrl-sep"></span>
-        <div class="ctrl-block ctrl-l0">
-          <input type="checkbox" id="l0toggle" checked>
-          <label for="l0toggle">Show L0 Beams</label>
+
+        <!-- Scale Figures -->
+        <div class="ctrl-section">
+          <div class="ctrl-section-label">Scale Figures</div>
+          <div class="pill-group">
+            <button type="button" class="pill scale-pill" data-scale="man">Man</button>
+            <button type="button" class="pill scale-pill" data-scale="woman">Woman</button>
+            <button type="button" class="pill scale-pill" data-scale="child">Child</button>
+          </div>
         </div>
-        <span class="ctrl-sep"></span>
-        <div class="ctrl-block ctrl-height">
-          <label for="slider">Post Height</label>
+
+        <!-- Post Height -->
+        <div class="ctrl-section">
+          <label for="slider" class="ctrl-section-label">Post Height</label>
           <input type="range" id="slider" min="7" max="14" step="0.5" value="9">
           <span id="hval">9.0 ft</span>
         </div>
+
       </div>
     </div>
     <button type="button" id="controls-fab" aria-label="Open pergola settings" title="Settings">
@@ -648,6 +537,17 @@ let showL0   = true;
 let showL3   = false;
 let nL3      = 8;
 let curProfile = 1;
+
+// Scale-reference human figures
+const SCALE_MAN_H   = 6.000;
+const SCALE_WOMAN_H = 5 + 7 / 12;   // 5'7"
+const SCALE_CHILD_H = 4 + 4 / 12;   // 4'4"
+const C_SCALE_MAN   = 0x2A4A6A;
+const C_SCALE_WOMAN = 0x6A3A5A;
+const C_SCALE_CHILD = 0x3A5A2A;
+let showScaleMan   = false;
+let showScaleWoman = false;
+let showScaleChild = false;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Footprint — drives all geometry; updated by the footprint picker
@@ -1108,6 +1008,155 @@ function buildSwing(h, n) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Scale-reference human figures
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildHumanFigure(height, color) {
+  const h   = height;
+  const grp = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color });
+  const geos = [];
+
+  function part(geo, x, y, z, rz) {
+    geos.push(geo);
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    if (rz !== undefined) m.rotation.z = rz;
+    m.castShadow = true;
+    grp.add(m);
+  }
+
+  // Anatomical proportions (all in feet)
+  const headR      = h * 0.065;
+  const neckR      = headR * 0.52;
+  const neckH      = h * 0.025;
+  const torsoH     = h * 0.30;
+  const torsoTopR  = headR * 1.45;
+  const hipH       = h * 0.06;
+  const hipTopR    = torsoTopR * 0.92;
+  const hipBotR    = torsoTopR * 0.82;
+  const upperArmL  = h * 0.17;
+  const foreArmL   = h * 0.15;
+  const armR       = headR * 0.33;
+  const upperLegL  = h * 0.24;
+  const lowerLegL  = h * 0.22;
+  const thighR     = headR * 0.48;
+  const calfR      = headR * 0.36;
+
+  // Y anchor points (measured from ground up)
+  const shoulderY = h - headR * 2 - neckH - torsoH;
+  const hipBotY   = shoulderY - hipH;
+  const neckBotY  = h - headR * 2;
+
+  // Head
+  part(new THREE.SphereGeometry(headR, 8, 6),
+    0, h - headR, 0);
+
+  // Neck
+  part(new THREE.CylinderGeometry(neckR * 0.9, neckR, neckH, 6),
+    0, neckBotY - neckH * 0.5, 0);
+
+  // Torso
+  part(new THREE.CylinderGeometry(torsoTopR * 0.88, torsoTopR, torsoH, 8),
+    0, shoulderY + torsoH * 0.5, 0);
+
+  // Hips
+  part(new THREE.CylinderGeometry(hipTopR, hipBotR, hipH, 8),
+    0, hipBotY + hipH * 0.5, 0);
+
+  // Arms
+  const ARM_TILT    = 0.30;  // ~17° outward splay
+  const FORE_TILT   = 0.45;  // forearm continues outward
+  const shoulderTopY = shoulderY + torsoH;
+  const shoulderXOff = torsoTopR * 0.88;
+
+  [-1, 1].forEach(s => {
+    // Upper arm
+    const uaGeo = new THREE.CylinderGeometry(armR * 0.80, armR, upperArmL, 6);
+    geos.push(uaGeo);
+    const ua = new THREE.Mesh(uaGeo, mat);
+    ua.position.set(
+      s * shoulderXOff + s * upperArmL * 0.5 * Math.sin(ARM_TILT),
+      shoulderTopY - upperArmL * 0.5 * Math.cos(ARM_TILT),
+      0
+    );
+    ua.rotation.z = s * ARM_TILT;
+    ua.castShadow = true;
+    grp.add(ua);
+
+    // Forearm — elbow is the bottom of the upper arm in world space
+    const elbowX = s * shoulderXOff + s * upperArmL * Math.sin(ARM_TILT);
+    const elbowY = shoulderTopY - upperArmL * Math.cos(ARM_TILT);
+    const faGeo = new THREE.CylinderGeometry(armR * 0.65, armR * 0.80, foreArmL, 6);
+    geos.push(faGeo);
+    const fa = new THREE.Mesh(faGeo, mat);
+    fa.position.set(
+      elbowX + s * foreArmL * 0.5 * Math.sin(FORE_TILT),
+      elbowY - foreArmL * 0.5 * Math.cos(FORE_TILT),
+      0
+    );
+    fa.rotation.z = s * FORE_TILT;
+    fa.castShadow = true;
+    grp.add(fa);
+  });
+
+  // Legs
+  const legTopX = hipBotR * 0.48;
+
+  [-1, 1].forEach(s => {
+    // Thigh
+    const ulGeo = new THREE.CylinderGeometry(thighR * 0.82, thighR, upperLegL, 6);
+    geos.push(ulGeo);
+    const ul = new THREE.Mesh(ulGeo, mat);
+    ul.position.set(s * legTopX, hipBotY - upperLegL * 0.5, 0);
+    ul.castShadow = true;
+    grp.add(ul);
+
+    // Calf
+    const llGeo = new THREE.CylinderGeometry(calfR * 0.75, calfR, lowerLegL, 6);
+    geos.push(llGeo);
+    const ll = new THREE.Mesh(llGeo, mat);
+    ll.position.set(s * legTopX, hipBotY - upperLegL - lowerLegL * 0.5, 0);
+    ll.castShadow = true;
+    grp.add(ll);
+  });
+
+  // Expose the local-space Y of the foot bottom so the caller can
+  // shift the group down until feet sit exactly on the ground plane.
+  grp._footBotY = hipBotY - upperLegL - lowerLegL;
+  grp._geoPool  = geos;
+  grp._mats     = [mat];
+  return grp;
+}
+
+let scaleManGroup   = null;
+let scaleWomanGroup = null;
+let scaleChildGroup = null;
+
+function buildSilhouettes() {
+  const baseX = footprint.width / 2 + 1.5;
+  const zPos  = footprint.depth / 2;
+
+  const defs = [
+    { show: showScaleMan,   height: SCALE_MAN_H,   color: C_SCALE_MAN,   xOff: 0.0 },
+    { show: showScaleWoman, height: SCALE_WOMAN_H, color: C_SCALE_WOMAN, xOff: 2.0 },
+    { show: showScaleChild, height: SCALE_CHILD_H, color: C_SCALE_CHILD, xOff: 3.5 },
+  ];
+
+  const groups = [null, null, null];
+  defs.forEach((d, i) => {
+    if (!d.show) return;
+    const grp = buildHumanFigure(d.height, d.color);
+    grp.position.set(baseX + d.xOff, -grp._footBotY, zPos);
+    scene.add(grp);
+    groups[i] = grp;
+  });
+  scaleManGroup   = groups[0];
+  scaleWomanGroup = groups[1];
+  scaleChildGroup = groups[2];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Rebuild / clear
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1138,14 +1187,17 @@ function rebuildGravel() {
 }
 
 function clearAll() {
-  [pergolaGroup, swingGroup].forEach(g => {
+  [pergolaGroup, swingGroup, scaleManGroup, scaleWomanGroup, scaleChildGroup].forEach(g => {
     if (!g) return;
     scene.remove(g);
     g._geoPool.forEach(geo => geo.dispose());
     g._mats.forEach(mat => mat.dispose());
   });
-  pergolaGroup = null;
-  swingGroup   = null;
+  pergolaGroup    = null;
+  swingGroup      = null;
+  scaleManGroup   = null;
+  scaleWomanGroup = null;
+  scaleChildGroup = null;
 }
 
 function rebuild(h, n) {
@@ -1155,6 +1207,7 @@ function rebuild(h, n) {
   swingGroup   = buildSwing(h, n);
   scene.add(pergolaGroup);
   scene.add(swingGroup);
+  buildSilhouettes();
   controls.target.set(0, h * 0.42 + 1.0, footprint.depth / 2);
   controls.update();
 }
@@ -1210,15 +1263,51 @@ nrafInput.addEventListener('input', () => {
   rebuild(curH, nRafters);
 });
 
-const l3Toggle    = document.getElementById('l3toggle');
 const nl3Input    = document.getElementById('nl3');
+const nl3Wrap     = document.getElementById('nl3-wrap');
 const l3LegendRow = document.getElementById('l3-legend-row');
+const l0LegendRow = document.getElementById('l0-legend-row');
 
-l3Toggle.addEventListener('change', () => {
-  showL3 = l3Toggle.checked;
-  nl3Input.disabled     = !showL3;
-  l3LegendRow.style.display = showL3 ? '' : 'none';
-  rebuild(curH, nRafters);
+// ── Footprint pills ────────────────────────────────────────────────────────
+document.querySelectorAll('.fp-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    footprint = {
+      width:  parseFloat(btn.dataset.w),
+      depth:  parseFloat(btn.dataset.d),
+      swingW: parseFloat(btn.dataset.sw),
+    };
+    document.querySelectorAll('.fp-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    syncUI();
+    rebuild(curH, nRafters);
+  });
+});
+
+// ── Profile pills ──────────────────────────────────────────────────────────
+document.querySelectorAll('.prof-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    curProfile = parseInt(btn.dataset.p, 10);
+    document.querySelectorAll('.prof-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rebuild(curH, nRafters);
+  });
+});
+
+// ── Visibility pills (L0, L3) ──────────────────────────────────────────────
+document.querySelectorAll('.vis-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    const on = btn.classList.contains('active');
+    if (btn.dataset.vis === 'l0') {
+      showL0 = on;
+      l0LegendRow.style.display = on ? '' : 'none';
+    } else {
+      showL3 = on;
+      l3LegendRow.style.display = on ? '' : 'none';
+      nl3Wrap.classList.toggle('visible', on);
+    }
+    rebuild(curH, nRafters);
+  });
 });
 
 nl3Input.addEventListener('input', () => {
@@ -1228,13 +1317,16 @@ nl3Input.addEventListener('input', () => {
   rebuild(curH, nRafters);
 });
 
-const l0Toggle    = document.getElementById('l0toggle');
-const l0LegendRow = document.getElementById('l0-legend-row');
-
-l0Toggle.addEventListener('change', () => {
-  showL0 = l0Toggle.checked;
-  l0LegendRow.style.display = showL0 ? '' : 'none';
-  rebuild(curH, nRafters);
+// ── Scale-figure pills ─────────────────────────────────────────────────────
+document.querySelectorAll('.scale-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    const on = btn.classList.contains('active');
+    if (btn.dataset.scale === 'man')   showScaleMan   = on;
+    if (btn.dataset.scale === 'woman') showScaleWoman = on;
+    if (btn.dataset.scale === 'child') showScaleChild = on;
+    rebuild(curH, nRafters);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1249,108 +1341,25 @@ window.addEventListener('resize', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Footprint picker
-// ─────────────────────────────────────────────────────────────────────────────
-
-const footprintBtn   = document.getElementById('footprint-btn');
-const footprintPopup = document.getElementById('footprint-popup');
-
-footprintBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  const open = footprintPopup.classList.toggle('open');
-  footprintBtn.textContent = open ? 'Footprint ▼' : 'Footprint ▲';
-});
-
-document.querySelectorAll('.footprint-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    footprint = {
-      width: parseFloat(btn.dataset.w),
-      depth: parseFloat(btn.dataset.d),
-      swingW: parseFloat(btn.dataset.sw),
-    };
-    document.querySelectorAll('.footprint-opt').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    footprintPopup.classList.remove('open');
-    footprintBtn.textContent = 'Footprint ▲';
-    syncUI();
-    rebuild(curH, nRafters);
-  });
-});
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('#footprint-wrap')) {
-    footprintPopup.classList.remove('open');
-    footprintBtn.textContent = 'Footprint ▲';
-  }
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Profile picker
-// ─────────────────────────────────────────────────────────────────────────────
-
-const profileBtn   = document.getElementById('profile-btn');
-const profilePopup = document.getElementById('profile-popup');
-
-profileBtn.addEventListener('click', e => {
-  e.stopPropagation();
-  const open = profilePopup.classList.toggle('open');
-  profileBtn.textContent = open ? 'Rafter Profile ▼' : 'Rafter Profile ▲';
-});
-
-document.querySelectorAll('.profile-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    curProfile = parseInt(btn.dataset.p, 10);
-    document.querySelectorAll('.profile-opt').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    profilePopup.classList.remove('open');
-    profileBtn.textContent = 'Rafter Profile ▲';
-    rebuild(curH, nRafters);
-  });
-});
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('#profile-wrap') && !e.target.closest('#footprint-wrap')) {
-    profilePopup.classList.remove('open');
-    profileBtn.textContent = 'Rafter Profile ▲';
-  }
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Mobile controls bottom sheet
+// Settings panel (FAB + floating sheet, all screen sizes)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const controlsShell    = document.getElementById('controls-shell');
 const controlsFab      = document.getElementById('controls-fab');
 const controlsClose    = document.getElementById('controls-close');
 const controlsBackdrop = document.getElementById('controls-backdrop');
-const mqControlsMobile = window.matchMedia('(max-width: 880px)');
 
 function setControlsSheetOpen(open) {
-  if (!mqControlsMobile.matches) return;
   controlsShell.classList.toggle('open', open);
   controlsBackdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
 }
 
-function closeControlsSheet() {
-  setControlsSheetOpen(false);
-}
-
 controlsFab.addEventListener('click', () => setControlsSheetOpen(true));
-controlsClose.addEventListener('click', closeControlsSheet);
-controlsBackdrop.addEventListener('click', closeControlsSheet);
-
-mqControlsMobile.addEventListener('change', e => {
-  if (!e.matches) controlsShell.classList.remove('open');
-});
+controlsClose.addEventListener('click', () => setControlsSheetOpen(false));
+controlsBackdrop.addEventListener('click', () => setControlsSheetOpen(false));
 
 window.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && controlsShell.classList.contains('open')) {
-    closeControlsSheet();
-    profilePopup.classList.remove('open');
-    profileBtn.textContent = 'Rafter Profile ▲';
-    footprintPopup.classList.remove('open');
-    footprintBtn.textContent = 'Footprint ▲';
-  }
+  if (e.key === 'Escape') setControlsSheetOpen(false);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
